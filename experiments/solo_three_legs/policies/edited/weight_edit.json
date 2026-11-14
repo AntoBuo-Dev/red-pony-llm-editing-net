@@ -1,0 +1,292 @@
+{
+  "source_policy": "../original",
+  "source_onnx_sha256": "97c60b95d34f9592a348d5f0294879cf821b8800d8b0465cbffdd9f109547932",
+  "onnx_sha256": "d2dfdf06dffe2617253fe5f3a8c297edf189c4405d37072f55c6c342b0d6a8b5",
+  "method": "hand edit, no training: unit freeing (least-squares fold) + hand-written circuits; see README",
+  "design": {
+    "foot_shift": {
+      "FR": [
+        0.06,
+        0.11,
+        -0.02
+      ],
+      "HL": [
+        0.06,
+        0.06,
+        -0.02
+      ],
+      "HR": [
+        0.06,
+        0.06,
+        -0.02
+      ]
+    },
+    "fr_swings": [
+      [
+        0.4,
+        0.1
+      ],
+      [
+        0.9,
+        0.1
+      ]
+    ],
+    "fr_nominal_swing": [
+      0.5,
+      0.45
+    ],
+    "cmd_trim": [
+      0.7,
+      0.2,
+      0.2
+    ],
+    "yaw_K": 0.5,
+    "n_bells": 40,
+    "bell_halfwidth": 1.5
+  },
+  "posture_offset_A_action_units": [
+    0.0,
+    0.0,
+    0.0,
+    1.5782626415349847,
+    -1.0728817727932238,
+    0.44501792104214566,
+    0.7404904960748807,
+    0.14790317736185704,
+    -1.7613082661333723,
+    0.8772789331828934,
+    -0.6423815758624382,
+    -0.4215294089279883
+  ],
+  "fault_signal": {
+    "w": [
+      -0.6468710599532783,
+      0.32326685172280073,
+      -0.5205380097126397,
+      0.29557780482347046,
+      0.3448983016582915,
+      0.22149820925450947
+    ],
+    "four_legs_rms": 0.06824050393594601,
+    "four_legs_max": 0.30416660722689665,
+    "three_legs_min": 0.9891664067625042,
+    "three_legs_max": 1.0296295792461434
+  },
+  "fault_flag_threshold": [
+    0.55,
+    0.85
+  ],
+  "yaw_loop_K": 0.5,
+  "command_trim": [
+    0.7,
+    0.2,
+    0.2
+  ],
+  "bell_synthesis": {
+    "n": 40,
+    "beta": 108.57732019518781,
+    "alpha": 0.23561944901923448,
+    "fit_error_action_units": {
+      "rms": [
+        0.010999070665019995,
+        0.028616332366139804,
+        0.036254651516447044
+      ],
+      "max": [
+        0.039662524042479275,
+        0.17263079280336868,
+        0.17044223445928264
+      ]
+    }
+  },
+  "freed_units": {
+    "layer1": [
+      225,
+      360,
+      443,
+      370,
+      103,
+      351,
+      303,
+      372,
+      405,
+      436,
+      477,
+      294,
+      350,
+      85,
+      45,
+      60,
+      132,
+      400,
+      314,
+      82,
+      151,
+      203,
+      5,
+      27,
+      228,
+      222,
+      104,
+      163,
+      354,
+      124,
+      78,
+      317,
+      442,
+      204,
+      268,
+      125,
+      25,
+      309,
+      483,
+      162,
+      257,
+      345,
+      239,
+      141,
+      440,
+      38
+    ],
+    "layer2": [
+      173,
+      94,
+      113,
+      239,
+      249,
+      21
+    ],
+    "layer3": [
+      48,
+      27,
+      99,
+      61,
+      40
+    ]
+  },
+  "circuit_units": {
+    "layer1": {
+      "flag": [
+        225,
+        360
+      ],
+      "abs": [
+        443,
+        370,
+        103,
+        351
+      ],
+      "bells": [
+        303,
+        372,
+        405,
+        436,
+        477,
+        294,
+        350,
+        85,
+        45,
+        60,
+        132,
+        400,
+        314,
+        82,
+        151,
+        203,
+        5,
+        27,
+        228,
+        222,
+        104,
+        163,
+        354,
+        124,
+        78,
+        317,
+        442,
+        204,
+        268,
+        125,
+        25,
+        309,
+        483,
+        162,
+        257,
+        345,
+        239,
+        141,
+        440,
+        38
+      ]
+    },
+    "layer2": {
+      "gate": [
+        173,
+        94
+      ],
+      "fr_signal": [
+        113,
+        239,
+        249
+      ],
+      "flag_pass": [
+        21
+      ]
+    },
+    "layer3": {
+      "fr_gated": [
+        48,
+        27,
+        99
+      ],
+      "ref": [
+        61
+      ],
+      "flag_pass": [
+        40
+      ]
+    }
+  },
+  "freeing_action_error": {
+    "rms": 0.0009734320683238285,
+    "max": 0.015146222942239274,
+    "p999": 0.0056774785921613795
+  },
+  "fitted_to_data": [
+    "N_FR: phase-averaged FR actions of the original on four legs (3 rollouts, vx 0.3 m/s)",
+    "w: fault signal weights, least-norm on four-leg observations of the original",
+    "unit freeing: least-squares fold on four-leg and three-leg observations"
+  ],
+  "weight_groups_changed": {
+    "mlp.0.weight[:, 2], [:, 8]": "E1 yaw-rate loop (all units)",
+    "mlp.0.weight[:, 9:12], [:, 21:24]": "E2 rank-1 update c w^T (posture hiding + command trim, gated by g)",
+    "mlp.0 rows of freed layer-1 units": "fault flag (2), |sin|,|cos| (4), 40 bells",
+    "mlp.2 / mlp.4 rows+cols of freed units": "gate G, FR signal pass-through, gated FR signal, flag pass-through",
+    "mlp.6 columns of the 5 layer-3 circuit units, mlp.6 bias rows 3..11": "FR re-timing and posture offset into the outputs",
+    "all next-layer weights/biases of freed units": "least-squares fold"
+  },
+  "changed_entries": {
+    "mlp.0.weight": 5890,
+    "mlp.0.bias": 46,
+    "mlp.2.weight": 131072,
+    "mlp.2.bias": 256,
+    "mlp.4.weight": 32768,
+    "mlp.4.bias": 128,
+    "mlp.6.weight": 1536,
+    "mlp.6.bias": 12
+  },
+  "checks": {
+    "three_legs_vs_prototype_max": 0.05724773543777695,
+    "three_legs_vs_prototype_rms": 0.0045517261759351335,
+    "four_legs_vs_original_plus_yawloop_max": 0.6241423367348271,
+    "four_legs_vs_original_plus_yawloop_rms": 0.053202759633701115,
+    "four_legs_vs_original_max": 0.6285320320129815,
+    "four_legs_vs_original_rms": 0.05369307869979941,
+    "onnx_vs_numpy_max": 1.8840261639674338e-06
+  },
+  "samples": {
+    "four_legs": 24000,
+    "three_legs": 24000
+  },
+  "build_time_s": 6.1
+}

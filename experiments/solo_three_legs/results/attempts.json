@@ -1,0 +1,805 @@
+{
+ "protocol": {
+  "fault": "locked front-left, from the start",
+  "T_s": 12.0,
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "commands": {
+   "stand": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fwd_0.3": [
+    0.3,
+    0.0,
+    0.0
+   ],
+   "turn_left": [
+    0.3,
+    0.0,
+    0.5
+   ]
+  },
+  "note": "prototypes evaluated outside the weights; the last row is the design compiled into policies/edited"
+ },
+ "attempts": [
+  {
+   "order": 0,
+   "name": "original network",
+   "description": "the trained trot, unchanged",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 1.0,
+     "vx": -2.1825714081062745e-05,
+     "vy": -2.6908003879929575e-05,
+     "wz": -0.0004814478941461083,
+     "yaw_deg": -1.3938006509876573,
+     "lat_rate_cm_s": -0.002204052152394891,
+     "tilt_deg": 24.392728059815102,
+     "height_m": 0.14107929627190952,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.3111111111111111,
+     "vx": 0.285121328880078,
+     "vy": 0.24172240750964402,
+     "wz": 0.019394114448063788,
+     "yaw_deg": 10.396550911025907,
+     "lat_rate_cm_s": 26.95904944463408,
+     "tilt_deg": 19.55122932168339,
+     "height_m": 0.16344636484071243,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.3238888888888889,
+     "vx": 0.298245744800417,
+     "vy": 0.22478532260011022,
+     "wz": 0.22915986587182893,
+     "yaw_deg": 169.03949689715932,
+     "lat_rate_cm_s": 19.385347764522724,
+     "tilt_deg": 19.75915608101926,
+     "height_m": 0.16178407056679195,
+     "survival_s": 12.0,
+     "falls": 0
+    }
+   }
+  },
+  {
+   "order": 1,
+   "name": "FR never swings",
+   "description": "front-right replays its mean stance pattern in its swing half",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 1.0,
+     "vx": -2.1825714081062745e-05,
+     "vy": -2.6908003879929575e-05,
+     "wz": -0.0004814478941461083,
+     "yaw_deg": -1.3938006509876573,
+     "lat_rate_cm_s": -0.002204052152394891,
+     "tilt_deg": 24.392728059815102,
+     "height_m": 0.14107929627190952,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.9972222222222222,
+     "vx": 0.04476983441500387,
+     "vy": 0.039488699419225205,
+     "wz": -0.06144645575542321,
+     "yaw_deg": -26.068592524258957,
+     "lat_rate_cm_s": 2.6818499729464587,
+     "tilt_deg": 25.954176208202835,
+     "height_m": 0.1470843589636709,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.9977777777777778,
+     "vx": 0.05652745078226615,
+     "vy": 0.02427863519375978,
+     "wz": -0.07042760383144892,
+     "yaw_deg": -23.366684288746843,
+     "lat_rate_cm_s": 0.9912431423994054,
+     "tilt_deg": 24.95435461473788,
+     "height_m": 0.14291220035154173,
+     "survival_s": 12.0,
+     "falls": 0
+    }
+   }
+  },
+  {
+   "order": 2,
+   "name": "FR short swing",
+   "description": "front-right swing compressed into 0.15 of the cycle",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 1.0,
+     "vx": -2.1825714081062745e-05,
+     "vy": -2.6908003879929575e-05,
+     "wz": -0.0004814478941461083,
+     "yaw_deg": -1.3938006509876573,
+     "lat_rate_cm_s": -0.002204052152394891,
+     "tilt_deg": 24.392728059815102,
+     "height_m": 0.14107929627190952,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.41277777777777774,
+     "vx": 0.3750518464644479,
+     "vy": 0.12329882466259427,
+     "wz": -0.015565825781540046,
+     "yaw_deg": 1.9250581800571887,
+     "lat_rate_cm_s": 19.32758134027289,
+     "tilt_deg": 23.999224036434935,
+     "height_m": 0.15360514549958074,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.5916666666666667,
+     "vx": 0.32331973076224685,
+     "vy": 0.0667929280541978,
+     "wz": 0.2726644190291865,
+     "yaw_deg": 199.63332403798827,
+     "lat_rate_cm_s": 16.780701186821787,
+     "tilt_deg": 25.52251426791459,
+     "height_m": 0.14677851102161746,
+     "survival_s": 12.0,
+     "falls": 0
+    }
+   }
+  },
+  {
+   "order": 3,
+   "name": "3-beat gait",
+   "description": "front-right and hind-left swing one after the other in the second half",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 1.0,
+     "vx": -2.1825714081062745e-05,
+     "vy": -2.6908003879929575e-05,
+     "wz": -0.0004814478941461083,
+     "yaw_deg": -1.3938006509876573,
+     "lat_rate_cm_s": -0.002204052152394891,
+     "tilt_deg": 24.392728059815102,
+     "height_m": 0.14107929627190952,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.5511111111111111,
+     "vx": 0.22465964486536083,
+     "vy": 0.07476590197499934,
+     "wz": 0.07319438051882514,
+     "yaw_deg": 48.802280818437026,
+     "lat_rate_cm_s": 19.664766705100458,
+     "tilt_deg": 26.686343936191093,
+     "height_m": 0.1547593267610747,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.6033333333333333,
+     "vx": 0.23367574496152455,
+     "vy": 0.051024422274650795,
+     "wz": 0.2722122507822036,
+     "yaw_deg": 203.26609259236056,
+     "lat_rate_cm_s": 11.266201075709334,
+     "tilt_deg": 26.48484895487165,
+     "height_m": 0.1516416471054979,
+     "survival_s": 12.0,
+     "falls": 0
+    }
+   }
+  },
+  {
+   "order": 4,
+   "name": "posture only, network sees it",
+   "description": "feet shifted forward-left (body back-right), offset added to the outputs",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": 0.0007653718498747882,
+     "vy": 0.0002014821454910487,
+     "wz": -0.00015435315005301673,
+     "yaw_deg": -0.40467293899314954,
+     "lat_rate_cm_s": 0.013237206211244948,
+     "tilt_deg": 15.379712918290162,
+     "height_m": 0.20594268617482095,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.0011111111111111111,
+     "vx": -0.014269192161992189,
+     "vy": -0.09972805485026988,
+     "wz": -0.16562550451107116,
+     "yaw_deg": -129.96542126083585,
+     "lat_rate_cm_s": -1.3279673502618325,
+     "tilt_deg": 17.15203199638108,
+     "height_m": 0.1986440391420542,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.0011111111111111111,
+     "vx": -0.00959286286886426,
+     "vy": -0.07045891478122494,
+     "wz": -0.02058259582548366,
+     "yaw_deg": -32.24694592349352,
+     "lat_rate_cm_s": -7.261644991419868,
+     "tilt_deg": 16.326055211298325,
+     "height_m": 0.19887335684161322,
+     "survival_s": 12.0,
+     "falls": 0
+    }
+   }
+  },
+  {
+   "order": 5,
+   "name": "posture only, PD without network",
+   "description": "same foot shift, fixed joint targets, no network",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": 0.001065230413144566,
+     "vy": 0.0004400334491593049,
+     "wz": -0.00031961246652701254,
+     "yaw_deg": -0.16155439996940965,
+     "lat_rate_cm_s": 0.03899238312446813,
+     "tilt_deg": 7.938313737532966,
+     "height_m": 0.19939168880594269,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": 0.001065230413144566,
+     "vy": 0.0004400334491593049,
+     "wz": -0.00031961246652701254,
+     "yaw_deg": -0.16155439996940965,
+     "lat_rate_cm_s": 0.03899238312446813,
+     "tilt_deg": 7.938313737532966,
+     "height_m": 0.19939168880594269,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": 0.001065230413144566,
+     "vy": 0.0004400334491593049,
+     "wz": -0.00031961246652701254,
+     "yaw_deg": -0.16155439996940965,
+     "lat_rate_cm_s": 0.03899238312446813,
+     "tilt_deg": 7.938313737532966,
+     "height_m": 0.19939168880594269,
+     "survival_s": 12.0,
+     "falls": 0
+    }
+   }
+  },
+  {
+   "order": 6,
+   "name": "posture through an input lie",
+   "description": "network told its legs are displaced the opposite way",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 1.0,
+     "vx": -2.895482685579128e-05,
+     "vy": -1.6117345663270023e-06,
+     "wz": -0.00024256777824635195,
+     "yaw_deg": -1.1916318299124435,
+     "lat_rate_cm_s": 0.0003274327608857185,
+     "tilt_deg": 24.655785040240517,
+     "height_m": 0.14115979832442757,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.3022222222222222,
+     "vx": 0.25235702309136643,
+     "vy": 0.40852425943927634,
+     "wz": -0.20120306870947005,
+     "yaw_deg": -171.3644271627221,
+     "lat_rate_cm_s": -17.322242490139573,
+     "tilt_deg": 19.997010608162697,
+     "height_m": 0.17050131314470787,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.32055555555555554,
+     "vx": 0.29582260665152177,
+     "vy": 0.4102525378262433,
+     "wz": 0.16898561926824937,
+     "yaw_deg": 108.22856932881302,
+     "lat_rate_cm_s": 39.28586377119657,
+     "tilt_deg": 20.614245782375026,
+     "height_m": 0.17041685129295694,
+     "survival_s": 12.0,
+     "falls": 0
+    }
+   }
+  },
+  {
+   "order": 7,
+   "name": "gravity lie",
+   "description": "constant +0.1 on projected-gravity y",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 1.0,
+     "vx": -3.9317137074491714e-05,
+     "vy": -2.2309402537263426e-05,
+     "wz": -0.0005379027083752817,
+     "yaw_deg": -1.5046233465153955,
+     "lat_rate_cm_s": -0.0016503841288956038,
+     "tilt_deg": 24.472524600998508,
+     "height_m": 0.14111471732019745,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.3261111111111111,
+     "vx": 0.2836901703404779,
+     "vy": 0.23209157718902484,
+     "wz": -0.048450738825089636,
+     "yaw_deg": -33.787022054389155,
+     "lat_rate_cm_s": 14.155616986437913,
+     "tilt_deg": 19.685537983034397,
+     "height_m": 0.1624948560190054,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.32722222222222225,
+     "vx": 0.3139219655793745,
+     "vy": 0.21832644083687858,
+     "wz": 0.19050241852790717,
+     "yaw_deg": 143.6747460649739,
+     "lat_rate_cm_s": 27.273475969522252,
+     "tilt_deg": 19.65098805653113,
+     "height_m": 0.16068661359462025,
+     "survival_s": 12.0,
+     "falls": 0
+    }
+   }
+  },
+  {
+   "order": 8,
+   "name": "posture hidden from the network",
+   "description": "offset added to the outputs and subtracted from joint-pos / last-action inputs",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": -0.00024799059653645724,
+     "vy": 6.224019818638819e-05,
+     "wz": 0.0022633716359230557,
+     "yaw_deg": 1.3663489256962282,
+     "lat_rate_cm_s": 0.002989897078406807,
+     "tilt_deg": 15.281641341699277,
+     "height_m": 0.20846633334476464,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.003888888888888889,
+     "vx": 0.015472160159957093,
+     "vy": -0.126379480304693,
+     "wz": -0.2526341998511062,
+     "yaw_deg": -250.14761623599304,
+     "lat_rate_cm_s": 4.792561902384161,
+     "tilt_deg": 15.246816699611088,
+     "height_m": 0.20998616267680428,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.0033333333333333335,
+     "vx": 0.0010907411848304776,
+     "vy": -0.12230110039535512,
+     "wz": -0.010645646197016112,
+     "yaw_deg": -84.13398729173159,
+     "lat_rate_cm_s": -9.920890909993474,
+     "tilt_deg": 14.149307558574156,
+     "height_m": 0.20929552598932108,
+     "survival_s": 12.0,
+     "falls": 0
+    }
+   }
+  },
+  {
+   "order": 9,
+   "name": "FR-medial-back posture (LIP design)",
+   "description": "front-right foot 5 cm back / 12 cm in, hidden, FR double stance",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 1.0,
+     "vx": 0.00038429214437865,
+     "vy": -0.00026401311457294635,
+     "wz": 0.0034119695874995273,
+     "yaw_deg": 8.756282464750067,
+     "lat_rate_cm_s": -0.031061741460348652,
+     "tilt_deg": 25.661358004470486,
+     "height_m": 0.1463596638788112,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.6411111111111111,
+     "vx": 0.08748188593982031,
+     "vy": 0.04319358832638783,
+     "wz": 0.061319735955441455,
+     "yaw_deg": 29.604071695021982,
+     "lat_rate_cm_s": 10.154773014663943,
+     "tilt_deg": 38.250196499207384,
+     "height_m": 0.17751234483459824,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.6266666666666666,
+     "vx": 0.13281063929530249,
+     "vy": 0.08874106576718259,
+     "wz": -0.00678518331211788,
+     "yaw_deg": -25.400899467376913,
+     "lat_rate_cm_s": 8.639934772605587,
+     "tilt_deg": 36.43499568176472,
+     "height_m": 0.1757693686098658,
+     "survival_s": 12.0,
+     "falls": 0
+    }
+   }
+  },
+  {
+   "order": 10,
+   "name": "hidden posture + FR double stance",
+   "description": "two short FR swings per cycle (0.40-0.50, 0.90-1.00)",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": -0.00024799059653645724,
+     "vy": 6.224019818638819e-05,
+     "wz": 0.0022633716359230557,
+     "yaw_deg": 1.3663489256962282,
+     "lat_rate_cm_s": 0.002989897078406807,
+     "tilt_deg": 15.281641341699277,
+     "height_m": 0.20846633334476464,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": -0.10395924206458719,
+     "vy": -0.18853749672897901,
+     "wz": -0.08906989767087488,
+     "yaw_deg": -44.6971587826313,
+     "lat_rate_cm_s": -13.509652903376368,
+     "tilt_deg": 12.957108865608411,
+     "height_m": 0.21161571526563824,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": -0.10781594793378006,
+     "vy": -0.1792573421171121,
+     "wz": 0.08843380352683956,
+     "yaw_deg": 49.945745266752944,
+     "lat_rate_cm_s": -22.549162862923698,
+     "tilt_deg": 13.157059772017696,
+     "height_m": 0.2112329690033573,
+     "survival_s": 12.0,
+     "falls": 0
+    }
+   }
+  },
+  {
+   "order": 11,
+   "name": "+ forward trim 0.5",
+   "description": "network sees vx + 0.5 m/s",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 0.026111111111111113,
+     "vx": -0.007777407181564243,
+     "vy": 0.014567507420210549,
+     "wz": 0.00011465258887902695,
+     "yaw_deg": 6.620693265501921,
+     "lat_rate_cm_s": 1.0375682228101641,
+     "tilt_deg": 18.494735916451294,
+     "height_m": 0.2086178335733492,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": 0.18655987830347176,
+     "vy": -0.13972985893725304,
+     "wz": -0.10165985881563155,
+     "yaw_deg": -98.4457043803679,
+     "lat_rate_cm_s": -21.25617754737641,
+     "tilt_deg": 9.606336680907967,
+     "height_m": 0.22544299530411616,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": 0.21178140810665258,
+     "vy": -0.09874817421607296,
+     "wz": 0.12853839538553422,
+     "yaw_deg": 45.85942943505816,
+     "lat_rate_cm_s": 1.2847851482090578,
+     "tilt_deg": 9.2379897061888,
+     "height_m": 0.2261145867830147,
+     "survival_s": 12.0,
+     "falls": 0
+    }
+   }
+  },
+  {
+   "order": 12,
+   "name": "+ trims (0.7, 0.2, 0.2) + yaw loop K 0.5 (final design)",
+   "description": "the design written into the weights",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": -0.0005423247659409906,
+     "vy": 0.000593910781722469,
+     "wz": 0.001917753805003528,
+     "yaw_deg": 2.2674289317620793,
+     "lat_rate_cm_s": 0.060234936518441105,
+     "tilt_deg": 13.8123501352965,
+     "height_m": 0.22630759558042754,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": 0.2368183194640804,
+     "vy": -0.04652732765968176,
+     "wz": 0.09117758918475782,
+     "yaw_deg": -2.1436230347815304,
+     "lat_rate_cm_s": -5.814524305969223,
+     "tilt_deg": 10.083747499909705,
+     "height_m": 0.22413338182446865,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.27111111111111114,
+     "vx": 0.15491656882989982,
+     "vy": 0.08396827271462215,
+     "wz": 0.13835272297040102,
+     "yaw_deg": 71.96958825255071,
+     "lat_rate_cm_s": 19.695943686922604,
+     "tilt_deg": 29.502579612615722,
+     "height_m": 0.2097310894944487,
+     "survival_s": 12.0,
+     "falls": 0
+    }
+   }
+  },
+  {
+   "order": 13,
+   "name": "ablation: final without hiding the posture",
+   "description": "posture offset and FR re-timing added to the outputs, inputs not shifted",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 0.13944444444444445,
+     "vx": 0.007138710720652991,
+     "vy": 0.008198215238948535,
+     "wz": -0.016219554564892436,
+     "yaw_deg": -15.767339625671438,
+     "lat_rate_cm_s": 0.8261140390779792,
+     "tilt_deg": 22.118719318233673,
+     "height_m": 0.1960082740610786,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.7399999999999999,
+     "vx": 0.04831286846402546,
+     "vy": 0.044564759569567326,
+     "wz": -0.09282496329673494,
+     "yaw_deg": -72.961217813466,
+     "lat_rate_cm_s": 1.5908213671271347,
+     "tilt_deg": 50.69616863986622,
+     "height_m": 0.20134756375338517,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.6766666666666666,
+     "vx": 0.08824453949189849,
+     "vy": 0.06360989210090763,
+     "wz": -0.020305389895082872,
+     "yaw_deg": -2.9803651728138987,
+     "lat_rate_cm_s": 9.874263612059828,
+     "tilt_deg": 46.56115945089141,
+     "height_m": 0.20145827563252958,
+     "survival_s": 12.0,
+     "falls": 0
+    }
+   }
+  },
+  {
+   "order": 14,
+   "name": "ablation: final without FR re-timing",
+   "description": "hidden posture + trims + yaw loop, FR keeps its original swing",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": -0.0005423247659409906,
+     "vy": 0.000593910781722469,
+     "wz": 0.001917753805003528,
+     "yaw_deg": 2.2674289317620793,
+     "lat_rate_cm_s": 0.060234936518441105,
+     "tilt_deg": 13.8123501352965,
+     "height_m": 0.22630759558042754,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.04944444444444444,
+     "vx": 0.055282257962391924,
+     "vy": -0.1312725640814141,
+     "wz": 0.10413383529972037,
+     "yaw_deg": 38.68100652118658,
+     "lat_rate_cm_s": -8.286742921876543,
+     "tilt_deg": 17.34029700694441,
+     "height_m": 0.21199165854937685,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.03666666666666667,
+     "vx": -0.00919114962317367,
+     "vy": -0.07099237776890763,
+     "wz": 0.3101392652977009,
+     "yaw_deg": 167.65657402479692,
+     "lat_rate_cm_s": -21.377820163744275,
+     "tilt_deg": 16.76094524303014,
+     "height_m": 0.2136295818498549,
+     "survival_s": 12.0,
+     "falls": 0
+    }
+   }
+  },
+  {
+   "order": 15,
+   "name": "ablation: final without posture offset",
+   "description": "FR re-timing + trims + yaw loop only",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 1.0,
+     "vx": 3.51119427179654e-06,
+     "vy": -2.6069346990389208e-05,
+     "wz": -0.0005081907859753907,
+     "yaw_deg": -1.3324104385206288,
+     "lat_rate_cm_s": -0.002156334011198696,
+     "tilt_deg": 24.7239558945279,
+     "height_m": 0.14416803322295024,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.7494444444444445,
+     "vx": 0.08496882405785078,
+     "vy": 0.13255409350592298,
+     "wz": 0.04376294081145798,
+     "yaw_deg": 31.179195587815077,
+     "lat_rate_cm_s": 14.77627488965706,
+     "tilt_deg": 27.15730332662875,
+     "height_m": 0.15370937772604468,
+     "survival_s": 12.0,
+     "falls": 0
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.9455555555555556,
+     "vx": 0.0705711719864985,
+     "vy": 0.05192979941110982,
+     "wz": 0.012226092259277033,
+     "yaw_deg": 47.83767866979949,
+     "lat_rate_cm_s": 8.48064275300923,
+     "tilt_deg": 25.11788131421065,
+     "height_m": 0.14253663663428923,
+     "survival_s": 12.0,
+     "falls": 0
+    }
+   }
+  },
+  {
+   "order": 16,
+   "name": "final design + tilt feedback (rejected)",
+   "description": "extra foot shift 0.1 m per unit of projected gravity x/y",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": 0.10476074734906,
+     "vy": -0.11871422494927848,
+     "wz": -0.7189177476114755,
+     "yaw_deg": -1.2485959033786445,
+     "lat_rate_cm_s": 0.062483662623591306,
+     "tilt_deg": 46.457321861217586,
+     "height_m": 0.182895106656891,
+     "survival_s": 4.073333333333333,
+     "falls": 2
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": 0.13700461940892913,
+     "vy": -0.1678322579520866,
+     "wz": -0.7492318349121473,
+     "yaw_deg": -27.894984977589726,
+     "lat_rate_cm_s": -4.293721632157006,
+     "tilt_deg": 44.42702245818655,
+     "height_m": 0.18145973673705915,
+     "survival_s": 4.073333333333333,
+     "falls": 2
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": 0.14101291276139352,
+     "vy": -0.13900885433575072,
+     "wz": -0.6229527657930601,
+     "yaw_deg": 13.947278530955545,
+     "lat_rate_cm_s": -2.4888446715004173,
+     "tilt_deg": 44.07725135191993,
+     "height_m": 0.18254416907891846,
+     "survival_s": 4.073333333333333,
+     "falls": 2
+    }
+   }
+  },
+  {
+   "order": 17,
+   "name": "final design + get-up reflex (rejected)",
+   "description": "extra 5 cm foot shift when g_x + g_y > 0.35",
+   "per_command": {
+    "stand": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": 0.06117305850764384,
+     "vy": -0.09674550212231343,
+     "wz": -0.4442766836373189,
+     "yaw_deg": -1.02422715846353,
+     "lat_rate_cm_s": 0.0,
+     "tilt_deg": 80.9076521997133,
+     "height_m": 0.04581381978984705,
+     "survival_s": 0.02666666666666667,
+     "falls": 3
+    },
+    "fwd_0.3": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": 0.07992171794105411,
+     "vy": -0.09094551277906411,
+     "wz": -0.5673753034977002,
+     "yaw_deg": -1.3238054962769776,
+     "lat_rate_cm_s": 0.0,
+     "tilt_deg": 80.0681487183537,
+     "height_m": 0.04696660206113176,
+     "survival_s": 0.02,
+     "falls": 3
+    },
+    "turn_left": {
+     "broken_leg_ground_frac": 0.0,
+     "vx": 0.07455141879463283,
+     "vy": -0.0843551548902347,
+     "wz": -0.5024584070157351,
+     "yaw_deg": -1.275657561760695,
+     "lat_rate_cm_s": 0.0,
+     "tilt_deg": 80.0562951671595,
+     "height_m": 0.0472475698934692,
+     "survival_s": 0.02,
+     "falls": 3
+    }
+   }
+  }
+ ]
+}

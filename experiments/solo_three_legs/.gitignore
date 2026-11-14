@@ -1,0 +1,2 @@
+# intermediate training checkpoints (the final ones are copied into policies/*/checkpoint.pt)
+runs/*/model_*.pt

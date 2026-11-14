@@ -526,6 +526,70 @@
     s = slider($('bell-ctl'), { label: 'Nose <i>ψ</i>', min: -180, max: 180, step: 1, value: 30, fmt: v => fmt(v, 0) + '°', on: v => { touched = true; psi = rad(v); f.redraw(); } });
   })();
 
+  // ================================================================= 7. SOLO results (measured, held-out seeds)
+  (function solo() {
+    const conds = [
+      { name: 'original', sub: '4 legs', col: C.orig, faded: true },
+      { name: 'edited', sub: '4 legs', col: C.edit, faded: true },
+      { name: 'original', sub: '3 legs', col: C.orig },
+      { name: 'edited', sub: '3 legs', col: C.edit },
+      { name: 'RL reference', sub: '3 legs', col: C.unit, hatch: true }
+    ];
+    const M = {
+      leg: { v: [null, null, 38.2, 7.0, 0.0], unit: ' %', d: 1, max: 45, goal: 'lower is better',
+        src: 'Share of time any part of the broken leg touches the floor. 11 commands × 10 held-out seeds × 20 s, MuJoCo.' },
+      lat: { v: [1.0, 1.5, 26.0, 9.6, 3.3], unit: ' cm/s', d: 1, max: 30, goal: 'lower is better',
+        src: 'Mean absolute sideways drift during the four forward commands (0.2–0.5 m/s).' },
+      head: { v: [3, 4, 48, 37, 9], unit: '°', d: 0, max: 55, goal: 'lower is better',
+        src: 'Mean absolute heading change in 20 s during the forward commands. The edit has no free action channel for a heading integrator.' },
+      tilt: { v: [0.5, 0.8, 19.8, 15.1, 3.1], unit: '°', d: 1, max: 24, goal: 'lower is better',
+        src: 'Mean body tilt over all commands.' },
+      spd: { v: [0.99, 1.04, 0.93, 0.63, 0.89], unit: '', d: 2, max: 1.2, goal: 'closer to 1 is better', ref: 1,
+        src: 'Measured forward speed divided by the command, forward commands 0.2–0.5 m/s. The edited network walks at about 0.2 m/s whatever the command; the original reaches 0.93 on three legs while dragging the broken leg.' },
+      turn: { v: [0.98, 0.98, 0.50, 0.38, 0.90], unit: '', d: 2, max: 1.2, goal: 'closer to 1 is better', ref: 1,
+        src: 'Measured turn rate divided by the command, turn and spin commands.' },
+      rec: { v: [null, null, 0, 20, 100], unit: ' %', d: 0, max: 110, goal: 'higher is better',
+        src: 'The leg locks 3 s into walking: share of runs that end up walking on three legs (10 seeds × 5 commands). Edited: 10 / 50, all with the leg locking early in its swing.' }
+    };
+    let key = 'leg';
+    const f = fig('solo-cv', {
+      ratio: 0.36, ratioNarrow: 0.95, minH: 260, maxH: 400,
+      draw(g) {
+        const m = M[key];
+        const L = { l: g.narrow ? 12 : 24, r: 12, t: 30, b: 62 };
+        const W = g.w - L.l - L.r, H = g.h - L.t - L.b;
+        const gap = W * 0.08, bw = Math.min(90, (W - gap) / 5 * 0.7);
+        const slot = (W - gap) / 5;
+        const xOf = i => L.l + slot * (i + 0.5) + (i >= 2 ? gap : 0);
+        const Y = v => L.t + H - v / m.max * H;
+        g.line(L.l, L.t + H, g.w - L.r, L.t + H, C.line, 1);
+        if (m.ref) { g.line(L.l, Y(m.ref), g.w - L.r, Y(m.ref), C.faint, 1, [4, 4]); g.text('command', g.w - L.r, Y(m.ref) - 5, { size: 11, align: 'right' }); }
+        g.text(m.goal, L.l, L.t - 12, { size: 12, col: C.muted });
+        const c = g.c;
+        conds.forEach((cd, i) => {
+          const v = m.v[i], x = xOf(i);
+          g.text(cd.name, x, L.t + H + 16, { size: g.narrow ? 10.5 : 12, align: 'center', col: cd.faded ? C.muted : C.text });
+          g.text(cd.sub, x, L.t + H + 31, { size: g.narrow ? 10 : 11, align: 'center', col: C.faint });
+          if (v === null) { g.text('—', x, L.t + H - 8, { size: 13, align: 'center', col: C.faint }); return; }
+          const y = Y(Math.min(v, m.max)), h = L.t + H - y;
+          c.save(); c.globalAlpha = cd.faded ? 0.45 : 1; c.fillStyle = cd.col;
+          c.fillRect(x - bw / 2, y, bw, Math.max(h, 1.5));
+          if (cd.hatch) {
+            c.beginPath(); c.rect(x - bw / 2, y, bw, h); c.clip(); c.strokeStyle = C.bg; c.lineWidth = 2;
+            for (let k = -h; k < bw + h; k += 9) { c.moveTo(x - bw / 2 + k, y + h); c.lineTo(x - bw / 2 + k + h, y); } c.stroke();
+          }
+          c.restore();
+          g.text(fmt(v, m.d) + m.unit, x, y - 7, { size: 13, align: 'center', font: 'num', col: cd.faded ? C.muted : C.text, weight: 500 });
+        });
+        g.text('four legs', (xOf(0) + xOf(1)) / 2, L.t + H + 48, { size: 11, align: 'center', col: C.faint });
+        g.text('front-left leg locked', xOf(3), L.t + H + 48, { size: 11, align: 'center', col: C.faint });
+        $('solo-src').innerHTML = '<b>Measured.</b> ' + m.src;
+      }
+    });
+    if (!f) return;
+    segmented('solo-seg', k => { key = k; f.redraw(); });
+  })();
+
   // ================================================================= tables
   (function tables() {
     const m = DATA.mission, tb = $('yaw-tab');

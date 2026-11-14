@@ -52,7 +52,7 @@
     <div class="stat"><b>0</b><span>gradient steps on the edited networks</span></div>
     <div class="stat"><b>82° → 1°</b><span>H1_2 heading drift in 30 s, walking with the turn stick at zero</span></div>
     <div class="stat"><b>0.26–0.50°</b><span>drone yaw error after jumps up to 100°, on a network that could not yaw</span></div>
-    <div class="stat"><b>3 legs</b><span>SOLO-12: train to walk, disable a leg, let the LLM edit the network</span></div>
+    <div class="stat"><b>38 % → 7 %</b><span>SOLO-12 on three legs: time spent leaning on the broken leg, before and after the edit (simulation)</span></div>
   </div>
   <div class="lesson real">
     <p class="l-seen"><b>On real robots</b>The edited H1_2 and drone networks run on the real robots. The figures and tables on this page come from simulation, where every trial can be repeated and measured; on hardware we are running a systematic campaign of experiments to build a larger pool of trials before reporting real-robot statistics.</p>
@@ -313,23 +313,127 @@ v<sub>y</sub> seen by the network = v<sub>y,cmd</sub> − 2p</pre>
 
 <!-- ============================================================ SOLO -->
 <section class="step" id="solo" aria-labelledby="t-solo">
-  <p class="eyebrow"><i style="background:var(--edit)"></i>Example 3 · SOLO-12 quadruped</p>
+  <p class="eyebrow"><i style="background:var(--edit)"></i>Example 3 · SOLO-12 quadruped · simulation</p>
   <h2 id="t-solo">Break a leg, then rewrite the network to walk on three.</h2>
-  <div id="solo-body" class="two">
+  <div class="two">
     <div class="prose">
-      <p class="status"><i></i>Experiment running</p>
-      <p>The first two examples added a missing behaviour. This one asks for more: the robot changes under the network. We train a walking policy for the open-source <b>SOLO-12</b> quadruped (Open Dynamic Robot Initiative) in MuJoCo, disable one leg, measure how the original policy fails, and let the LLM edit the network until the robot walks on three legs, with the same rules: no gradient steps on the edited network, same shape, every fitted part declared.</p>
-      <ol>
-        <li>Train a velocity-tracking walking policy (PPO, MLP with ELU, non-privileged observations).</li>
-        <li>Disable one leg in simulation and measure the original policy on three legs.</li>
-        <li>LLM edit: probe, free idle units, write the circuits, test, look at the failures, repeat.</li>
-        <li>Compare original on 4 and 3 legs, edited on 3 and 4 legs.</li>
-      </ol>
+      <p>The first two examples added a missing behaviour. This one asks for more: the robot changes under the network. A walking policy for the open-source <b>SOLO-12</b> quadruped (MLP 47 → 512 → 256 → 128 → 12 with ELU, PPO, 27 minutes of training in MuJoCo) trots cleanly and tracks its speed command at 0.99. Then its <b>front-left leg is broken</b>: motors off, leg locked folded under the body.</p>
+      <p>The original network does not fall, but it limps on the folded leg: the leg drags on the floor <b>38 %</b> of the time, the body tilts by 20° and drifts sideways at 26 cm/s.</p>
+      <p>After the edit the robot walks on its three working legs with the broken one in the air: on the floor <b>7 %</b> of the time. It is a partial success. It walks slowly, about 0.2 m/s whatever the command, does not hold its heading, works only in a narrow range of floor friction, and a network fine-tuned with RL on three legs, kept as a reference, does better on every measure.</p>
     </div>
-    <div class="lesson">
-      <p class="l-seen"><b>Status</b>Results, videos and the edit will be published here when the experiment is complete, whether or not it succeeds.</p>
+    <figure>
+      <video src="assets/solo/three_legs_original_vs_edited.mp4" poster="assets/solo/three_legs_original_vs_edited.jpg" controls muted playsinline loop preload="none"></video>
+      <figcaption>Front-left leg locked, command 0.3 m/s. Left: original network, leaning on the folded leg. Right: edited network, no training.</figcaption>
+    </figure>
+  </div>
+
+  <div class="board">
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Measure" id="solo-seg">
+        <button type="button" data-k="leg" aria-pressed="true">Broken leg on the floor</button>
+        <button type="button" data-k="lat" aria-pressed="false">Lateral drift</button>
+        <button type="button" data-k="head" aria-pressed="false">Heading change</button>
+        <button type="button" data-k="tilt" aria-pressed="false">Body tilt</button>
+        <button type="button" data-k="spd" aria-pressed="false">Speed / command</button>
+        <button type="button" data-k="turn" aria-pressed="false">Turn / command</button>
+        <button type="button" data-k="rec" aria-pressed="false">Leg locks mid-walk</button>
+      </div>
+    </div>
+    <canvas id="solo-cv" aria-label="Bar chart comparing original, edited and RL reference networks on four and three legs"></canvas>
+    <p class="src" id="solo-src"></p>
+  </div>
+
+  <div class="two flip">
+    <figure>
+      <img src="assets/solo/gait_diagrams.jpg" alt="Foot contact diagrams: original on four legs, original with the front-left leg locked, edited with the leg locked" loading="lazy">
+      <figcaption>Foot contacts over 2 s at 0.3 m/s (filled = on the ground). In the trot the front-left and hind-right feet share a stance; with the front-left gone, the original stands on the hind-right foot alone and the folded leg (red) hits the floor every cycle. The edited gait gives the front-right leg two short swings per cycle and never touches the floor with the broken leg here.</figcaption>
+    </figure>
+    <div class="prose">
+      <h3>Why the original limps</h3>
+      <p>Contacts binned by gait phase showed the problem precisely. In a trot the front-left and hind-right feet carry the robot together. Without the front-left leg, for half of every cycle the robot stands on the hind-right foot alone, 26 cm from its centre of mass, and tips onto the broken corner. The network then uses the folded leg as a skid.</p>
+      <p>So the edit has to move the centre of mass, not just change the timing: shift the three working feet forward and to the left so that the body sits inside their triangle, and re-time the front-right leg so that it is on the ground when the hind-right one would be alone.</p>
     </div>
   </div>
+
+  <h3>The path, failed attempts included</h3>
+  <ol class="path">
+    <li class="diag"><span class="tag">measure</span><h4>Where does the weight go?</h4><p>Contacts by gait phase: the hind-right foot is alone during the front-left's stance, and the robot falls onto the broken corner every cycle.</p></li>
+    <li class="ko"><span class="tag">fails</span><h4>Change only the timing.</h4><p>Front-right never swings, a short front-right swing, a three-beat gait: the broken leg still touches the floor 41–100 % of the time. Timing alone does not move the centre of mass.</p></li>
+    <li class="ok"><span class="tag">works</span><h4>A three-leg stance exists.</h4><p>Shift the three feet 6 cm forward and 6–11 cm left. With fixed joint targets and no network at all the robot stands level on three legs (8° tilt): the posture is right.</p></li>
+    <li class="ko"><span class="tag">fails</span><h4>Lie to the network instead.</h4><p>Tell it that its joints, or gravity, are displaced, so that it moves the legs itself: it keeps limping (30–33 %).</p></li>
+    <li class="ko"><span class="tag">fails</span><h4>A textbook design.</h4><p>Front-right foot under the body, from an inverted-pendulum model: it leans on the broken leg 64 % of the time with 38° of tilt. The network's balance reactions, trained for four legs, fight it.</p></li>
+    <li class="idea"><span class="tag">idea</span><h4>Hide the posture from the network.</h4><p>Added at the output, the posture shift comes back through the <code>last_action</code> input and the network pulls it back. Subtracting it from the joint-position and last-action inputs, a change of coordinates, lets the network keep walking around the new posture.</p></li>
+    <li class="ok"><span class="tag">half</span><h4>Front-right double stance.</h4><p>The front-right leg replays its own stance twice per cycle, with two short swings instead of one long one. Level body, steps on three legs, but it walks backwards or not at all.</p></li>
+    <li class="ok"><span class="tag">works</span><h4>Command trim and a yaw-rate loop.</h4><p>On three legs the network moves far slower than it "thinks": adding 0.7 m/s to the forward command it sees gives about 0.2 m/s. A yaw-rate loop and small side/yaw trims reduce the turn the asymmetric gait produces. This is the final design.</p></li>
+    <li class="diag"><span class="tag">ablate</span><h4>Every part is needed.</h4><p>Without hiding the posture the broken leg is on the floor 74 % of the time; without the posture shift 75 %; without the front-right re-timing the robot stays level but barely moves (0.06 m/s).</p></li>
+    <li class="ko"><span class="tag">rejected</span><h4>Reflexes to get up after a fault.</h4><p>A tilt feedback and threshold "get-up" reflexes, meant to lift the robot off the broken leg when it breaks mid-walk: they tip it over (6 / 9 and 9 / 9 falls) or change nothing.</p></li>
+  </ol>
+
+  <div class="two">
+    <div class="board">
+      <pre class="code"><span class="cm"># inputs it reads: front-left joints q, dq; gyro; command; gait clock</span>
+<span class="y">g</span> = w · [q<sub>FL</sub>, dq<sub>FL</sub>]          <span class="cm"># ≈ 1 when the leg is locked</span>
+<span class="c">F</span> = clamp((g − 0.55) / 0.30, 0, 1)  <span class="cm"># fault flag</span>
+<span class="c">G</span> = F and gait clock running       <span class="cm"># gate</span>
+
+<span class="cm"># what the original units now receive (first layer)</span>
+ω<sub>z</sub>'  = ω<sub>z</sub> + 0.5 (ω<sub>z</sub> − gyro<sub>z</sub>)       <span class="cm"># always on</span>
+q'   = q − 0.3 A·g                 <span class="cm"># hide the posture</span>
+a'   = last_action − A·g
+cmd' = cmd + (0.7, 0.2, 0.2)·g     <span class="cm"># trim</span>
+
+<span class="cm"># output</span>
+a = net(obs') + <span class="c">F</span>·A + <span class="c">G</span>·D<sub>FR</sub>(φ)
+<span class="cm"># A: feet 6 cm forward, 6–11 cm left</span>
+<span class="cm"># D_FR: front-right re-timing, 40 bell units</span></pre>
+    </div>
+    <div class="prose">
+      <h3>How it is written in the weights</h3>
+      <p>A first layer cannot multiply, so a constant shift that applies <em>only when the leg is broken</em> is written as a rank-1 update of the six front-left joint columns: the fault signal <code>g</code> is itself a linear function of those inputs. The price is a small leak on four legs, where <code>g</code> is not exactly zero.</p>
+      <p>46 / 6 / 5 hidden units are freed by the same least-squares fold as in the H1_2 edit (action error rms 0.001) and rewritten as the fault flag, the gate, and 40 bump units that synthesise the front-right re-timing over the gait phase.</p>
+      <p>Same shape, same file format; the builder turns the original ONNX into the edited one in 6 s, bit for bit reproducible. <b>Fitted to data, declared:</b> the fault-signal weights, the original's own phase-averaged front-right pattern, and the fold. The design parameters were found by hand over about a hundred prototype runs in the same simulator, which is why the results below use seeds never seen during the design.</p>
+    </div>
+  </div>
+
+  <div class="table">
+    <table>
+      <thead><tr><th>MuJoCo, 11 commands × 10 held-out seeds × 20 s</th><th>falls</th><th>broken leg on floor</th><th>speed / cmd</th><th>lateral drift</th><th>heading, 20 s</th><th>turn / cmd</th><th>tilt</th></tr></thead>
+      <tbody>
+        <tr><td>Original, four legs</td><td>0/110</td><td>—</td><td>0.99</td><td>1.0 cm/s</td><td>3°</td><td>0.98</td><td>0.5°</td></tr>
+        <tr><td>Edited, four legs</td><td>0/110</td><td>—</td><td>1.04</td><td>1.5 cm/s</td><td>4°</td><td>0.98</td><td>0.8°</td></tr>
+        <tr><td>Original, front-left locked</td><td class="o">0/110</td><td class="o">38.2 %</td><td class="o">0.93</td><td class="o">26.0 cm/s</td><td class="o">48°</td><td class="o">0.50</td><td class="o">19.8°</td></tr>
+        <tr><td><b>Edited, front-left locked</b></td><td class="e">0/110</td><td class="e">7.0 %</td><td class="e">0.63</td><td class="e">9.6 cm/s</td><td class="e">37°</td><td class="e">0.38</td><td class="e">15.1°</td></tr>
+        <tr><td>RL fine-tuned on three legs (trained reference)</td><td>0/110</td><td>0.0 %</td><td>0.89</td><td>3.3 cm/s</td><td>9°</td><td>0.90</td><td>3.1°</td></tr>
+      </tbody>
+      <caption>Each seed draws friction 0.7–1.1, a mass offset and the initial pose. Speed, drift and heading are averaged over the four forward commands (0.2–0.5 m/s); the edited network walks at about 0.2 m/s for all of them. The original's 0.93 on three legs is reached while dragging the broken leg. The RL reference is the original fine-tuned with PPO for 600 iterations on the locked leg: an upper bound, not part of the edit.</caption>
+    </table>
+  </div>
+
+  <div class="media-grid">
+    <figure>
+      <video src="assets/solo/leg_locks_recovers.mp4" poster="assets/solo/leg_locks_recovers.jpg" controls muted playsinline loop preload="none"></video>
+      <figcaption>The leg locks while walking and the edited network gets onto three legs. This happens in 10 of 50 runs, all with the leg locking early in its swing, unloaded. The original never does (0 / 50), the RL reference always (50 / 50).</figcaption>
+    </figure>
+    <figure>
+      <video src="assets/solo/leg_locks_fails.mp4" poster="assets/solo/leg_locks_fails.jpg" controls muted playsinline loop preload="none"></video>
+      <figcaption>The same fault at another moment of the gait: the edited network ends up leaning on the broken leg, more than the original does (40–48 % of the time against 29–33 %).</figcaption>
+    </figure>
+    <figure>
+      <video src="assets/solo/edited_vs_rl_reference.mp4" poster="assets/solo/edited_vs_rl_reference.jpg" controls muted playsinline loop preload="none"></video>
+      <figcaption>Edited network (left) against the network fine-tuned with RL on three legs (right): the trained reference is faster, straighter and more level.</figcaption>
+    </figure>
+    <figure>
+      <img src="assets/solo/friction_sweep.jpg" alt="Forward speed and broken-leg contact as a function of floor friction for the three networks" loading="lazy">
+      <figcaption>Floor friction sweep at 0.3 m/s. The edited gait works between 0.8 and 1.0. At 0.5–0.6 it walks backwards (a second, reversed gait mode), at 0.7 it stays in place, at 1.1 and above it falls onto the broken leg. On four legs it walks normally at every friction.</figcaption>
+    </figure>
+  </div>
+
+  <div class="lesson">
+    <p class="l-seen"><b>Seen</b>A network trained only on four legs can be rewritten to walk on three, without a gradient step, by moving its posture, hiding that move from it, and re-timing one leg.</p>
+    <p class="l-got"><b>Understood</b>The hard part is not the gait but the attractors: the edited gait has several stable modes (three-leg walk, backwards walk, leaning on the broken leg) and friction or the moment of the fault decides which one wins.</p>
+    <p class="l-next"><b>Not done</b>Simulation only, one leg broken in one way (a passive leg still collapses, 55 / 55), no free action channel for a heading integrator. Next: a transformer backbone that switches between four and three legs online, to see what attention does with the broken leg.</p>
+  </div>
+  <p class="src">Code, policies, every evaluation and the attempts table: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/tree/main/experiments/solo_three_legs">experiments/solo_three_legs</a>. SOLO-12 description from Gepetto/example-robot-data (BSD), Open Dynamic Robot Initiative.</p>
 </section>
 
 <!-- ============================================================ METHOD -->
@@ -356,6 +460,7 @@ v<sub>y</sub> seen by the network = v<sub>y,cmd</sub> − 2p</pre>
   <div class="prose">
     <ul>
       <li><b>Real-robot statistics are still coming.</b> The edited H1_2 and drone networks run on the real robots, but the measurements on this page come from simulation: a Python replica of the H1_2 controller, a fast and a full simulator for the drone, without sensor noise. A systematic real-robot campaign is under way to collect a larger pool of trials; until it is done we do not report hardware success rates.</li>
+      <li><b>SOLO-12 is simulation only.</b> One leg broken in one way, a narrow friction band, slow and drifting gait; the RL fine-tuned reference beats the edit on every measure.</li>
       <li><b>Robustness.</b> The original networks were trained with domain randomisation; the edits are built on one model. How much robustness survives has not been measured systematically yet.</li>
       <li><b>Hand-tuned parameters.</b> Thresholds, gains, number and shape of the sensor units were chosen with few attempts. They work; how far they are from the edges is mostly unknown.</li>
       <li><b>Side effects.</b> H1_2 gives up three wrist joints as memory; the drone's limiter is tuned to one hover thrust and one motor curve.</li>
@@ -374,7 +479,7 @@ v<sub>y</sub> seen by the network = v<sub>y,cmd</sub> − 2p</pre>
       <p class="mark-sub">LLM editing of trained networks</p>
     </div>
     <p><b>Project R.E.D. Pony</b> · <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net">github.com/AntoBuo-Dev/red-pony-llm-editing-net</a></p>
-    <p>H1_2 source policy, robot description and controller conventions: <a href="https://github.com/gaetanotorella/H1_2_Squat_Locomotion_RL">H1_2_Squat_Locomotion_RL</a> (Gaetano Torella, University of Naples Federico II, PRISMA Lab), Apache-2.0. SOLO-12: Open Dynamic Robot Initiative.</p>
+    <p>H1_2 source policy, robot description and controller conventions: <a href="https://github.com/gaetanotorella/H1_2_Squat_Locomotion_RL">H1_2_Squat_Locomotion_RL</a> (Gaetano Torella, University of Naples Federico II, PRISMA Lab), Apache-2.0. SOLO-12: Open Dynamic Robot Initiative, description from Gepetto/example-robot-data (BSD).</p>
     <p>Edits designed and carried out with an LLM agent (Claude), tested in simulation and on the real robots. Numbers on this page come from the experiment logs; drawings marked as schematic are illustrations.</p>
   </div>
 </footer>

@@ -1,0 +1,14 @@
+SOLO-12 description used in this experiment
+===========================================
+
+Source : https://github.com/Gepetto/example-robot-data  (commit 78b6101a6387de721316b0db717351d899f97b4f, 2026-11-05)
+         robots/solo_description/robots/solo12.urdf  -> urdf/solo12_upstream.urdf (unmodified)
+         robots/solo_description/meshes/stl/solo12/*.stl and meshes/stl/with_foot/*.stl -> meshes/ (unmodified)
+Origin : Open Dynamic Robot Initiative, robot_properties_solo
+         (https://github.com/open-dynamic-robot-initiative/robot_properties_solo), see README_upstream_solo_description.md
+Licence: example-robot-data is distributed under the BSD 2-Clause licence (LICENSE_example-robot-data, copied verbatim);
+         its solo_description/README states that the upstream robot_properties_solo files are BSD-3-Clause.
+
+Generated here (sim/build_model.py): solo12.xml and solo12_train.xml (MJCF). Added on top of the URDF: free joint,
+floor, primitive collision geoms, joint armature/damping/friction/ranges, position actuators (kp 4, kd 0.2,
+|tau| <= 2.7 Nm), sensors, and inactive joint-lock equalities used to simulate the broken leg.
