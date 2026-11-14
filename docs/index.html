@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Project R.E.D. Pony</title>
-<meta name="description" content="Editing trained robot policies by hand: an LLM reads the weights, finds room inside the network and writes new behaviour into it, without retraining. Unitree H1_2 heading hold, quadrotor yaw tracking, SOLO-12 on three legs.">
+<meta name="description" content="An LLM edits trained robot policies by hand, without retraining: H1_2 heading hold, quadrotor yaw tracking, SOLO-12 on three legs.">
 <meta name="theme-color" content="#0d1014">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,6 @@
   <div class="wrap">
     <a class="brand" href="#top"><img src="assets/pony.svg" alt="" width="30" height="26">R.E.D. Pony</a>
     <nav aria-label="Sections">
-      <a href="#idea">Idea</a>
       <a href="#toolkit">Toolkit</a>
       <a href="#fold">The fold</a>
       <a href="#h1">H1_2</a>
@@ -36,9 +35,9 @@
 <section class="hero" aria-labelledby="t-hero">
   <p class="kicker">Project R.E.D. Pony · LLM editing of trained networks</p>
   <h1 id="t-hero">Behaviours written <em>into the weights</em></h1>
-  <p class="thesis">A trained robot policy is a stack of tables of numbers. We let an LLM read them, find the room inside, and write a new behaviour straight into the weights: no retraining, same network shape, same file format. Three robots, three edits, failed attempts included.</p>
+  <p class="thesis">An LLM reads a trained robot policy, finds room inside it and writes the missing behaviour into the weights. No retraining, same network, same file.</p>
   <div class="board">
-    <canvas id="hero-net" aria-label="Animated drawing of a two-layer network: most units are idle, some are freed and rewritten as a hand-made circuit"></canvas>
+    <canvas id="hero-net" aria-label="A two-layer network: idle units are freed and rewritten as a circuit"></canvas>
     <div class="controls">
       <div class="seg" role="group" aria-label="Stage of the edit" id="hero-seg">
         <button type="button" data-k="0" aria-pressed="true">1 · Trained network</button>
@@ -49,41 +48,20 @@
     <p class="src" id="hero-cap"></p>
   </div>
   <div class="stats">
-    <div class="stat"><b>0</b><span>gradient steps on the edited networks</span></div>
-    <div class="stat"><b>82° → 1°</b><span>H1_2 heading drift in 30 s, walking with the turn stick at zero</span></div>
-    <div class="stat"><b>0.26–0.50°</b><span>drone yaw error after jumps up to 100°, on a network that could not yaw</span></div>
-    <div class="stat"><b>0 → 17 / 30</b><span>SOLO-12 on three legs: goals reached by the network alone, original vs edited v2 (simulation)</span></div>
+    <div class="stat"><b>0</b><span>gradient steps</span></div>
+    <div class="stat"><b>82° → 1°</b><span>H1_2 heading drift in 30 s</span></div>
+    <div class="stat"><b>0.26–0.50°</b><span>drone yaw error, on a network that could not yaw</span></div>
+    <div class="stat"><b>0 → 17/30</b><span>SOLO goals reached on three legs</span></div>
   </div>
   <div class="lesson real">
-    <p class="l-seen"><b>On real robots</b>The edited H1_2 and drone networks run on the real robots. The figures and tables on this page come from simulation, where every trial can be repeated and measured; on hardware we are running a systematic campaign of experiments to build a larger pool of trials before reporting real-robot statistics.</p>
-  </div>
-</section>
-
-<!-- ============================================================ IDEA -->
-<section class="step" id="idea" aria-labelledby="t-idea">
-  <p class="eyebrow"><i style="background:var(--text)"></i>The idea</p>
-  <h2 id="t-idea">Why edit a network by hand when you could retrain it?</h2>
-  <div class="two">
-    <div class="prose">
-      <p>Retraining needs the training stack, the reward design, the compute and a new round of sim-to-real validation. Often the network is almost right: it walks, it hovers, it squats, and fails at one specific thing it was never asked to do.</p>
-      <p>A small policy network is not a black box when you can read every number. Most of its units turn out to be idle, the ones that work have a readable job, and a nonlinearity like ELU is enough to build integrators, clamps, products and switches. So the missing behaviour can be <em>written</em>, in the same file, next to what the network already does.</p>
-      <p>Doing this by hand is slow and error-prone. An LLM agent is good at exactly the parts that are tedious for a person: reading weight files, writing probe scripts, running the simulator, keeping a log of what failed and why, and producing a reproducible builder script (original file in, edited file out).</p>
-    </div>
-    <div class="lesson">
-      <p class="l-seen"><b>Rules</b>No gradient descent or RL on the edited network. Same layer sizes. The original file is never touched.</p>
-      <p class="l-got"><b>Allowed</b>Reading weights and activations, probing in simulation, folding idle units away, writing circuits with ELU units, solving linear systems. Anything fitted to data is declared as such.</p>
-      <p class="l-next"><b>Shown</b>Everything, in the order it happened, including the attempts that failed. Every number on this page comes from the experiment logs; drawings that are schematic say so.</p>
-    </div>
+    <p class="l-seen"><b>Real robots</b>The H1_2 and drone edits run on the real robots; a systematic hardware campaign is under way. Numbers on this page are from simulation.</p>
   </div>
 </section>
 
 <!-- ============================================================ TOOLKIT -->
 <section class="step" id="toolkit" aria-labelledby="t-kit">
   <p class="eyebrow"><i style="background:var(--circuit)"></i>Toolkit</p>
-  <h2 id="t-kit">What can you build out of ELU units?</h2>
-  <div class="prose">
-    <p>Each hidden unit computes <code>elu(w·x + b)</code>: the number itself on the right of zero, <code>eᵘ − 1</code> on the left. With a few units and well-chosen weights you get every block a controller needs. The white curve is the exact function, the violet one is what the units compute.</p>
-  </div>
+  <h2 id="t-kit">A few ELU units build any controller block.</h2>
   <div class="board">
     <div class="controls">
       <div class="seg" role="group" aria-label="Building block" id="kit-seg">
@@ -95,7 +73,7 @@
         <button type="button" data-k="gate" aria-pressed="false">Gate</button>
       </div>
     </div>
-    <canvas id="kit" aria-label="Plot of an ELU construction against the exact function"></canvas>
+    <canvas id="kit" aria-label="ELU construction against the exact function"></canvas>
     <div class="controls" id="kit-ctl"></div>
     <div class="eq" id="kit-eq"></div>
     <p class="src" id="kit-src"></p>
@@ -105,13 +83,13 @@
 <!-- ============================================================ FOLD -->
 <section class="step" id="fold" aria-labelledby="t-fold">
   <p class="eyebrow"><i style="background:var(--orig)"></i>The lesson that cost a crash</p>
-  <h2 id="t-fold">Add the correction before the fold, not after it.</h2>
+  <h2 id="t-fold">Correct before the fold, not after it.</h2>
   <div class="two">
     <div class="board">
       <canvas id="fold-cv" aria-label="ELU curve with an operating point and its tangent"></canvas>
       <div class="controls">
         <div class="seg" role="group" aria-label="Presets" id="fold-seg">
-          <button type="button" data-k="flat" aria-pressed="true">On the flat side</button>
+          <button type="button" data-k="flat" aria-pressed="true">Flat side</button>
           <button type="button" data-k="after" aria-pressed="false">Add after: +1.45</button>
           <button type="button" data-k="before" aria-pressed="false">Add before: +3.5</button>
         </div>
@@ -120,523 +98,352 @@
       <div class="readouts" id="fold-ro"></div>
     </div>
     <div class="prose">
-      <p>In the drone experiment the network delivered the wrong thrust at most headings. The obvious fix was to add, at every heading, the thrust that was missing at the output. The value came out right, and the drone diverged in flight.</p>
-      <p>A unit pushed to the flat side of the ELU keeps a slope near zero. Adding a constant after the fold moves its output but not its slope, so the controller keeps the right value and loses its gain: at +90° the thrust reacted to height with 0.8 N/m instead of 61 N/m.</p>
-      <p>Adding the same amount <em>before</em> the fold slides the operating point back onto the straight side: same output, slope 1. Try the three presets: the output is the same 0.5 in the last two, the slope differs by a factor of twenty.</p>
-      <p class="src">Exact ELU curve; the starting pre-activation −3 is an example unit, as in the original write-up.</p>
+      <p>Adding the missing thrust at the drone's output gave the right value, and the drone diverged.</p>
+      <p>A unit on the flat side of the ELU has almost no slope. Adding after the fold fixes its value, not its gain. Adding before it moves the unit back to the steep side: same output, slope 1.</p>
     </div>
   </div>
 </section>
 
 <!-- ============================================================ H1 -->
 <section class="step" id="h1" aria-labelledby="t-h1">
-  <p class="eyebrow"><i style="background:var(--hold)"></i>Example 1 · Unitree H1_2 humanoid</p>
-  <h2 id="t-h1">Make a humanoid walk straight when nobody steers.</h2>
+  <p class="eyebrow"><i style="background:var(--hold)"></i>Unitree H1_2 humanoid</p>
+  <h2 id="t-h1">Walk straight when nobody steers.</h2>
   <div class="two">
     <div class="prose">
-      <p>The walk-and-squat policy of the Unitree H1_2 (an MLP 465 → 512 → 256 → 128 → 27, trained with PPO in Isaac Lab and deployed on the real robot) walks well, but with the turn stick at zero it slowly turns: <b>2.84 °/s</b> on average, <b>82°</b> after 30 s. Its observations contain no heading and the network has no memory, so nothing inside it can notice the drift.</p>
-      <p>The edit gives the network a heading controller and a memory to run it:</p>
+      <p>With the turn stick at zero the walking policy drifts 2.84 °/s (82° in 30 s). It has no heading input and no memory.</p>
       <ol>
-        <li><b>Make room.</b> 20 / 9 / 5 redundant units of the three hidden layers are folded by least squares into the rest of their layer (action error rms 0.005).</li>
-        <li><b>Write the circuit.</b> Yaw rate from gyro and projected gravity, a heading-error integrator and its integral, with clamps and an on/off gate, all built from ELU units.</li>
-        <li><b>Store the state in the actions.</b> The two integrator states are written to the two wrist-yaw action channels and come back one step later through <code>last_action</code>.</li>
-        <li><b>Steer through the network's own command.</b> The correction is added to the turn command the original network reads, so the robot corrects with its own trained turning gait.</li>
+        <li><b>Make room:</b> fold 20/9/5 redundant units away (error rms 0.005).</li>
+        <li><b>Write a heading integrator</b> with ELU products, clamps and a gate.</li>
+        <li><b>Store its state</b> in two wrist action channels, read back next step.</li>
+        <li><b>Steer through the network's own turn command.</b></li>
       </ol>
     </div>
     <div class="board">
-      <pre class="code"><span class="cm"># the circuit (dt = 0.02 s)</span>
+      <pre class="code"><span class="cm"># dt = 0.02 s</span>
 rate = −(ω<sub>y</sub> g<sub>y</sub> + ω<sub>z</sub> g<sub>z</sub>)(1 + g<sub>x</sub>²)
-act  = gait clock running and |ω<sub>z,cmd</sub>| ≈ 0
 <span class="c">θ'</span>   = clamp(θ + dt (ω<sub>z,cmd</sub> − rate), ±0.35·act)
 <span class="c">I'</span>   = clamp(I + dt θ, ±0.30·act)
-
-<span class="cm"># memory: action 25 = 2θ, action 26 = 2I</span>
-<span class="cm"># read back next step through last_action</span>
-
 ω<sub>z</sub> seen by the network = ω<sub>z,cmd</sub> + 3θ + 3I
 
-<span class="cm"># second version: lateral hold</span>
-<span class="y">v̂</span>  = w · h<sub>1</sub> + b      <span class="cm"># ridge readout, fitted</span>
-<span class="c">p'</span> = clamp(p + dt v̂, ±0.15·act)
-v<sub>y</sub> seen by the network = v<sub>y,cmd</sub> − 2p</pre>
-      <p class="src">The lateral velocity readout <code>v̂</code> is the only part fitted to data (ridge regression on closed-loop rollouts, 3128 steady conditions).</p>
+<span class="cm"># v2: lateral hold (v̂ = ridge readout, fitted)</span>
+<span class="c">p'</span> = clamp(p + dt v̂, ±0.15·act),  v<sub>y</sub> −= 2p</pre>
     </div>
   </div>
 
   <div class="board">
-    <canvas id="h1-cv" aria-label="Top view of three robots walking: original, heading hold, heading plus lateral hold"></canvas>
+    <canvas id="h1-cv" aria-label="Top view of three robots walking"></canvas>
     <div class="controls">
       <button type="button" class="btn strong" id="h1-play">Walk 30 s</button>
       <div class="legend">
         <span><i style="background:var(--orig)"></i>original</span>
         <span><i style="background:var(--hold)"></i>heading hold</span>
-        <span><i style="background:var(--edit)"></i>heading + lateral hold</span>
+        <span><i style="background:var(--edit)"></i>+ lateral hold</span>
       </div>
     </div>
     <div class="readouts" id="h1-ro"></div>
-    <p class="src"><b>Schematic.</b> 0.8 m/s forward for 30 s with constant drift rates equal to the measured means (yaw 2.84 °/s for the original, lateral 2.13 and 0.32 cm/s for the two edits); real paths wobble with the gait. First panel: top view at equal scale. Second panel: lateral deviation in centimetres; the original leaves that window within a few metres.</p>
+    <p class="src"><b>Schematic</b>, with the measured mean drift rates at 0.8 m/s.</p>
   </div>
 
   <div class="table">
     <table>
-      <thead><tr><th>Python MuJoCo replica of the controller</th><th>original</th><th>heading hold</th><th>heading + lateral</th></tr></thead>
+      <thead><tr><th>Controller replica</th><th>original</th><th>heading hold</th><th>+ lateral</th></tr></thead>
       <tbody>
-        <tr><td>Mean absolute yaw rate (28 commands, 30 s)</td><td class="o">2.84 °/s</td><td class="h">0.017 °/s</td><td>—</td></tr>
-        <tr><td>Mean absolute yaw after 30 s</td><td class="o">81.8°</td><td class="h">1.05°</td><td>—</td></tr>
-        <tr><td>Rms distance of the path from a straight line</td><td class="o">34.8 cm</td><td class="h">1.2 cm</td><td>—</td></tr>
-        <tr><td>Mean absolute lateral drift (60 commands)</td><td class="o">31.2 cm/s</td><td class="h">2.13 cm/s</td><td class="e">0.32 cm/s</td></tr>
-        <tr><td>Worst lateral deviation in 30 s</td><td class="o">20.3 m</td><td class="h">2.25 m</td><td class="e">0.62 m</td></tr>
-        <tr><td>Mean action change per step (legs, torso)</td><td class="o">0.087</td><td class="h">0.090</td><td>—</td></tr>
+        <tr><td>Yaw rate</td><td class="o">2.84 °/s</td><td class="h">0.017 °/s</td><td>—</td></tr>
+        <tr><td>Yaw after 30 s</td><td class="o">81.8°</td><td class="h">1.05°</td><td>—</td></tr>
+        <tr><td>Lateral drift</td><td class="o">31.2 cm/s</td><td class="h">2.13 cm/s</td><td class="e">0.32 cm/s</td></tr>
+        <tr><td>Worst lateral deviation, 30 s</td><td class="o">20.3 m</td><td class="h">2.25 m</td><td class="e">0.62 m</td></tr>
         <tr><td>Falls</td><td class="o">0</td><td class="h">0</td><td class="e">0</td></tr>
       </tbody>
-      <caption>Heights 0.98 / 0.85 / 0.74 / 0.71 m for the heading metrics; vx −0.3 and 0.2…1.0 m/s at six heights for the lateral metrics. Yaw kicks of 1–1.5 rad/s and floor friction 0.5 / 1.5: no fall, heading back within about 2°. The numbers in this table come from the replica; the edited policies also run on the real H1_2, where the systematic campaign is under way.</caption>
     </table>
   </div>
 
   <div class="media-grid">
     <figure>
       <video src="assets/h1/standing_0.98m_0.8ms_comparison.mp4" poster="assets/h1/standing_0.98m_0.8ms_comparison.jpg" controls muted playsinline preload="none"></video>
-      <figcaption>Standing height 0.98 m, 0.8 m/s. Left to right: original, heading hold, heading + lateral hold. Red line: initial heading of the torso. Bottom: top view of the three paths.</figcaption>
+      <figcaption>0.98 m, 0.8 m/s: original, heading hold, + lateral.</figcaption>
     </figure>
     <figure>
       <video src="assets/h1/crouched_0.74m_0.6ms_comparison.mp4" poster="assets/h1/crouched_0.74m_0.6ms_comparison.jpg" controls muted playsinline preload="none"></video>
-      <figcaption>Crouched at 0.74 m, 0.6 m/s. Same three networks, same command.</figcaption>
+      <figcaption>Crouched at 0.74 m, 0.6 m/s.</figcaption>
     </figure>
   </div>
+
   <div class="board">
     <div class="controls">
       <div class="seg" role="group" aria-label="Signal" id="push-seg">
         <button type="button" data-k="yaw" aria-pressed="true">Heading</button>
-        <button type="button" data-k="lat" aria-pressed="false">Lateral displacement</button>
-        <button type="button" data-k="corr" aria-pressed="false">Correction fed to the network</button>
+        <button type="button" data-k="lat" aria-pressed="false">Lateral</button>
+        <button type="button" data-k="corr" aria-pressed="false">Correction</button>
       </div>
     </div>
-    <canvas id="push-cv" aria-label="Time series of heading, lateral displacement and internal correction for the three H1_2 networks, with a yaw kick at 9 s and a lateral push at 17 s"></canvas>
+    <canvas id="push-cv" aria-label="Heading, lateral displacement and internal correction with a yaw kick at 9 s and a push at 17 s"></canvas>
     <div class="legend" id="push-leg"></div>
     <p class="src" id="push-src"></p>
   </div>
-  <div class="lesson">
-    <p class="l-seen"><b>Seen</b>No hidden unit was unused, but some were redundant: folding them away cost an action error of 0.005 rms.</p>
-    <p class="l-got"><b>Understood</b>The best place to inject a correction is an input the network already understands (here the turn command), not the joints.</p>
-    <p class="l-next"><b>Price</b>Three wrist joints became memory registers, and a gyro bias <code>b</code> still turns the robot at <code>b</code>.</p>
-  </div>
-  <p class="src">Code, edited ONNX files and <code>weight_edit.json</code>: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/tree/main/examples/h1_heading_hold">examples/h1_heading_hold</a>. Source policy: <a href="https://github.com/gaetanotorella/H1_2_Squat_Locomotion_RL">H1_2_Squat_Locomotion_RL</a> (Apache-2.0).</p>
+  <p class="src">Code and edited networks: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/tree/main/examples/h1_heading_hold">examples/h1_heading_hold</a> · source policy: <a href="https://github.com/gaetanotorella/H1_2_Squat_Locomotion_RL">H1_2_Squat_Locomotion_RL</a>.</p>
 </section>
 
 <!-- ============================================================ DRONE -->
 <section class="step" id="drone" aria-labelledby="t-drone">
-  <p class="eyebrow"><i style="background:var(--yaw)"></i>Example 2 · Quadrotor hover network</p>
-  <h2 id="t-drone">Teach a hover network to turn its nose.</h2>
+  <p class="eyebrow"><i style="background:var(--yaw)"></i>Quadrotor hover network</p>
+  <h2 id="t-drone">Teach a hover network to turn.</h2>
   <div class="two">
     <div class="prose">
-      <p>A hover policy, an MLP 17 → 512 → 512 → 4 run every 20 ms, holds a quadrotor within 2.7 cm of its target. It reads velocity, attitude, position error, and sin/cos of the yaw error, and outputs thrust and three body rates. In training the yaw reward had weight zero.</p>
-      <p>Probed with the drone still, level and at zero error, the network does not ignore yaw at all: its yaw-rate command has an attracting rest point near <b>−50°</b> and a repelling one near <b>+140°</b>, whatever the reference. Thrust equals the weight only near −50°. The network built its own operating point.</p>
-      <p>Pick a reference and a starting heading, then release both drones. The left one runs on the measured outputs of the original network, the right one on the rewritten yaw command.</p>
+      <p>The hover policy (MLP 17-512-512-4) holds position to 2.7 cm but always points its nose to −50°, whatever the reference. It was trained with zero yaw reward.</p>
+      <p>Release both drones: left, the measured original; right, the rewritten yaw command.</p>
     </div>
     <div class="board">
-      <canvas id="yaw-cv" aria-label="Two drones seen from above: the original goes to minus 50 degrees, the edited one follows the reference"></canvas>
+      <canvas id="yaw-cv" aria-label="Original goes to −50°, edited follows the reference"></canvas>
       <div class="controls" id="yaw-ctl"></div>
       <div class="controls">
         <button type="button" class="btn strong" id="yaw-go">Release</button>
         <div class="readouts" id="yaw-ro"></div>
       </div>
-      <p class="src"><b>Left, measured:</b> yaw-rate command of the original network at zero error, 8 headings, linearly interpolated. <b>Right, exact:</b> the rewritten command <code>ω<sub>z</sub> = 0.8·lim(1.25 sin e + 0.6 (h⁺ − h⁻))</code>. Nose only: no position, delay or noise.</p>
     </div>
   </div>
 
   <div class="two flip">
     <div class="board">
-      <canvas id="bell-cv" aria-label="Twenty-three yaw sensor units around a circle and their activations"></canvas>
+      <canvas id="bell-cv" aria-label="Twenty-three yaw sensor units and their activations"></canvas>
       <div class="controls" id="bell-ctl"></div>
-      <p class="src"><b>Exact:</b> <code>φᵢ = elu(20 (cos(ψ − ψᵢ) − cos 50°))</code>, 23 centres every 15.7°, valid level and to first order in the tilt.</p>
     </div>
     <div class="prose">
-      <h3>Neurons that measure where the nose points</h3>
-      <p>413 of the 512 first-layer units and 490 of the 512 second-layer units are idle (usage below 10⁻³ over 200 000 states). An idle unit is freed by removing its connection and adding its constant contribution to the next bias: the output does not change.</p>
-      <p>The attitude matrix already contains cos ψ and sin ψ. A freed first-layer unit with the right weights computes <code>cos(ψ − ψᵢ)</code>; subtract cos 50°, scale by 20, pass through the ELU, and you get a bump that lights up only within ±50° of its centre. <b>23 freed units became yaw sensors.</b></p>
-      <p>With them, the second-layer pre-activations are shifted so that at every heading they equal those of the network's own equilibrium at −50°: <code>Φ C = D</code>, 23 equations, 23 unknowns, no fit, no optimisation.</p>
+      <h3>Neurons that sense yaw</h3>
+      <p>413 and 490 of the 512 units per layer were idle. Twenty-three of them became yaw sensors, each lit within ±50° of its heading.</p>
+      <p>With them, the next layer is shifted back to the network's own equilibrium at every heading: a 23 × 23 linear system, no fit.</p>
     </div>
   </div>
 
-  <h3>The path, failed attempts included</h3>
+  <h3>How it went</h3>
   <ol class="path">
-    <li class="diag"><span class="tag">read</span><h4>Read the file before running it.</h4><p>The yaw-error columns have norm 0.62 / 0.59, a third of the weakest other input. But the normaliser remembers a mean heading: an arrow of length 0.79 towards −36°. The visited states were not uniform in yaw.</p></li>
-    <li class="diag"><span class="tag">probe</span><h4>Probe at zero error.</h4><p>Sweeping only the heading: attracting point near −50°, repelling near +140°, thrust ≈ the weight only near −50°.</p></li>
-    <li class="diag"><span class="tag">probe</span><h4>Broken, or just shifted?</h4><p>Yaw frozen at 24 headings: the drone stops everywhere without oscillating, up to 1.43 m lower. A stable controller at every yaw, with the wrong operating point. And it brakes a 0.5 m/s motion at every yaw: it learned to rotate velocity into the body frame, a product that cannot be written by hand in the first layer.</p></li>
-    <li class="idea"><span class="tag">room</span><h4>Count the idle units.</h4><p>413 / 512 and 490 / 512 idle. More than 80 % of the network is constant.</p></li>
-    <li class="ok"><span class="tag">works</span><h4>The yaw command.</h4><p>Disconnect the old yaw error and write a new path sin(error) → unit → unit → ω<sub>z</sub>. Two extra units make a steep step near ±180°, where sin = 0 left a 157° error stuck; now about 3°.</p></li>
-    <li class="ko"><span class="tag">fails</span><h4>Add the missing thrust at the output.</h4><p>Right value, wrong gain: at +90° the thrust reacts to height with 0.8 N/m instead of 61 N/m, and the flight diverges. See <a href="#fold">the fold</a>.</p></li>
-    <li class="idea"><span class="tag">idea</span><h4>Neurons that measure yaw.</h4><p>23 freed units become bump-shaped yaw sensors.</p></li>
-    <li class="ok"><span class="tag">half</span><h4>Exact shift before the last fold.</h4><p>The offset disappears (error 1–5 cm after settling), but with 40 ms of delay the thrust oscillates at 15 headings out of 24.</p></li>
-    <li class="diag"><span class="tag">diagnose</span><h4>Why it oscillates.</h4><p>Far from −50° the vertical gain triples, up to 46 N/(m/s), above the <code>Gτ/m = π/2</code> limit of a delayed loop (38.8 at 40 ms). The lateral response flips from brake to push.</p></li>
-    <li class="ok"><span class="tag">works</span><h4>Two branches, two cures.</h4><p>Freeze yaw in the 277 first-layer units that hardly see horizontal velocity; shift only the 215 second-layer units that weigh on thrust. Each cure alone fixes one branch and spoils the other; together: error below 2.1 cm at every yaw, steady thrust up to 40 ms of delay.</p></li>
-    <li class="ko"><span class="tag">fails</span><h4>First full-simulator flight: the takeoff.</h4><p>44 N at start, climbs at 2 m/s, cuts thrust, hits the ground at 2.2 s. The offset we removed was also braking the climb. Two units on the height error now limit it (20 N/m).</p></li>
-    <li class="diag"><span class="tag">false alarm</span><h4>The next flight aborts at 1.76 s.</h4><p>Altitude jumps from 0.63 to 1.47 m in 20 ms: 42 m/s, impossible. A second simulator was publishing on the same channel. A plausibility check on the log avoided fixing a defect that did not exist.</p></li>
-    <li class="ok"><span class="tag">works</span><h4>The cube falls 6 times out of 6, then passes.</h4><p>At 1.8 m of height error the limiter removed 29 N, three times the hover thrust. One more unit gives it a ceiling (max 22 N). The cube passes with 1 cm steady error; every flight was repeated with the final file.</p></li>
+    <li class="diag"><span class="tag">probe</span><h4>Stable at every heading, wrong operating point.</h4></li>
+    <li class="ok"><span class="tag">works</span><h4>New yaw command, with a steep step at ±180°.</h4></li>
+    <li class="ko"><span class="tag">fails</span><h4>Missing thrust added at the output: right value, no gain, diverges.</h4></li>
+    <li class="ok"><span class="tag">half</span><h4>Exact shift before the fold: offset gone, oscillates with 40 ms delay.</h4></li>
+    <li class="ok"><span class="tag">works</span><h4>Yaw frozen in the vertical branch, shift only on thrust units.</h4></li>
+    <li class="ko"><span class="tag">fails</span><h4>First full-sim flight: the removed offset was braking the climb.</h4></li>
+    <li class="diag"><span class="tag">false alarm</span><h4>An abort caused by a second simulator on the same local network.</h4></li>
+    <li class="ok"><span class="tag">works</span><h4>Climb limiter with a ceiling: all missions pass.</h4></li>
   </ol>
 
-  <details class="more">
-    <summary>The final recipe: eight moves, about 21 000 of 272 896 weights</summary>
-    <div>
-      <ol class="prose">
-        <li>Disconnect the yaw error from the old network (its zero-error value goes into the bias).</li>
-        <li>Retire 28 idle units in layer 1 and 5 in layer 2.</li>
-        <li>Freeze yaw in 277 layer-1 units: they see the nose at −50°.</li>
-        <li>Let the network settle at −50° and read its true equilibrium (nothing written).</li>
-        <li>Write 23 yaw-sensor bumps in layer 1 and the exact shift on 215 layer-2 units.</li>
-        <li>Three units cancel the remaining output residuals (harmless now: units sit on the right side of the fold).</li>
-        <li>New yaw command following sin(error), limited to 0.8 rad/s, with a steep step near ±180°.</li>
-        <li>Climb limiter: two units on the height error plus a ceiling, at most 22 N.</li>
-      </ol>
-      <div class="eq">ω<sub>z</sub> = w<sub>max</sub> · lim<sub>±1</sub>( (K / w<sub>max</sub>) sin e + (H / B)(h⁺ − h⁻) ),   h<sup>±</sup> = elu( B (± sin e − λ (1 + cos e)) )
-<span class="k">K = 1 s⁻¹, w_max = 0.8 rad/s, B = 20, λ = 2, H = 12</span>
-
-<span class="c">ΔT</span> = −(g<sub>c</sub> / B<sub>c</sub>) [ elu(B<sub>c</sub>(e<sub>z</sub> − k<sub>c</sub>)) − elu(B<sub>c</sub>(e<sub>z</sub> − t<sub>c</sub>)) − const ]
-<span class="k">g_c = 20 N/m, k_c = 0.35 m, t_c = 1.45 m, B_c = 10, at most 22 N</span></div>
-      <p class="src">3660 + 16 756 + 527 = 20 943 weights changed, almost all of them biases. The saved file reproduces the computed network within 3.6·10⁻⁴ on the outputs.</p>
-    </div>
-  </details>
-
   <div class="table">
     <table>
-      <thead><tr><th>Yaw mission, full simulator</th><th>reference</th><th>jump</th><th>original error</th><th>edited error</th><th>time to &lt;10°</th><th>position</th><th>peak</th></tr></thead>
+      <thead><tr><th>Yaw mission</th><th>reference</th><th>jump</th><th>original error</th><th>edited error</th><th>time to &lt;10°</th><th>position</th><th>peak</th></tr></thead>
       <tbody id="yaw-tab"></tbody>
-      <caption>Six references in a row on a fixed point: 0°, 45°, 90°, −90°, 170°, 0°. Edited values: nominal / with 30 ms of extra command delay and 15 ms motor time constant. Error measured from 4 s after each jump: with the 0.8 rad/s limit a 180° jump takes about 4.7 s, so 3.47° and 2.15° are a nose still arriving, not a steady error.</caption>
+      <caption>Full simulator; edited: nominal / +30 ms delay. 20 943 of 272 896 weights changed.</caption>
     </table>
   </div>
   <div class="table">
     <table>
-      <thead><tr><th>Mission summary</th><th>original</th><th>edited</th></tr></thead>
+      <thead><tr><th>Missions</th><th>original</th><th>edited</th></tr></thead>
       <tbody id="drone-tab"></tbody>
-      <caption>Edited network: 3 flights per mission and condition. Two values: nominal / with delay. 20 flights in total, 18 completed; 2 stopped by loss of the radio link, cause not isolated.</caption>
+      <caption>18 of 20 flights completed; 2 lost the radio link.</caption>
     </table>
   </div>
-  <div class="lesson">
-    <p class="l-seen"><b>Seen</b>A network trained with no pressure on yaw still depends strongly on yaw: zero training error says nothing about what it does elsewhere.</p>
-    <p class="l-got"><b>Understood</b>Values live after the fold, gains live in which side of the fold each unit sits on. Every behaviour you remove must be replaced or checked.</p>
-    <p class="l-next"><b>On the real drone</b>The edited network flies on the real quadrotor. The numbers above are from simulation; the systematic flight campaign under way is building a larger pool of flights.</p>
-  </div>
-  <p class="src">Write-up with all the numbers: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/tree/main/examples/drone_yaw">examples/drone_yaw</a>. The code lives in the AC-MPC research repository and is not published here.</p>
+  <p class="src">Write-up: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/tree/main/examples/drone_yaw">examples/drone_yaw</a>.</p>
 </section>
 
 <!-- ============================================================ SOLO -->
 <section class="step" id="solo" aria-labelledby="t-solo">
-  <p class="eyebrow"><i style="background:var(--edit)"></i>Example 3 · SOLO-12 quadruped · simulation</p>
-  <h2 id="t-solo">Break a leg, then rewrite the network to walk on three.</h2>
+  <p class="eyebrow"><i style="background:var(--edit)"></i>SOLO-12 quadruped · simulation</p>
+  <h2 id="t-solo">Break a leg, then rewrite the network.</h2>
   <div class="two">
     <div class="prose">
-      <p>The first two examples added a missing behaviour. This one asks for more: the robot changes under the network. A walking policy for the open-source <b>SOLO-12</b> quadruped (MLP 47 → 512 → 256 → 128 → 12 with ELU, PPO, 27 minutes of training in MuJoCo) trots cleanly and tracks its speed command at 0.99. Then its <b>front-left leg is broken</b>: motors off, leg locked folded under the body.</p>
-      <p>The original network does not fall, but it limps on the folded leg: the leg drags on the floor <b>38 %</b> of the time, the body tilts by 20° and drifts sideways at 26 cm/s.</p>
-      <p>After the edit the robot walks on its three working legs with the broken one in the air: on the floor <b>7 %</b> of the time. It is a partial success. It walks slowly, about 0.2 m/s whatever the command, works only in a narrow range of floor friction, and in v1 it did not hold its heading. <b>v2</b> adds a heading hold written like the one on H1_2, with its memory in the dead leg's action channels: with the network alone the robot reaches <b>17 of 30</b> goals (original 0, v1 9), and with joystick steering 27 of 30. A network fine-tuned with RL on three legs, kept as a reference, still does better (20 and 30 of 30).</p>
+      <p>A trot policy trained on four legs (MLP 47-512-256-128-12). With the front-left leg locked it limps on the folded leg (38 % of the time) and never reaches a goal.</p>
+      <p>Edited, it walks on three legs: the broken leg touches the floor 7 % of the time, and v2 reaches 17 of 30 goals with a fixed command. An RL fine-tune on three legs reaches 20.</p>
     </div>
     <figure>
       <video src="assets/solo/three_legs_original_vs_edited.mp4" poster="assets/solo/three_legs_original_vs_edited.jpg" controls muted playsinline loop preload="none"></video>
-      <figcaption>Front-left leg locked, command 0.3 m/s. Left: original network, leaning on the folded leg. Right: edited network, no training.</figcaption>
+      <figcaption>Leg locked, 0.3 m/s: original (left), edited (right).</figcaption>
     </figure>
   </div>
 
   <div class="board">
     <div class="controls">
       <div class="seg" role="group" aria-label="Measure" id="solo-seg">
-        <button type="button" data-k="leg" aria-pressed="true">Broken leg on the floor</button>
+        <button type="button" data-k="leg" aria-pressed="true">Broken leg on floor</button>
         <button type="button" data-k="lat" aria-pressed="false">Lateral drift</button>
-        <button type="button" data-k="head" aria-pressed="false">Heading change</button>
-        <button type="button" data-k="tilt" aria-pressed="false">Body tilt</button>
-        <button type="button" data-k="spd" aria-pressed="false">Speed / command</button>
-        <button type="button" data-k="turn" aria-pressed="false">Turn / command</button>
-        <button type="button" data-k="rec" aria-pressed="false">Leg locks mid-walk</button>
+        <button type="button" data-k="head" aria-pressed="false">Heading</button>
+        <button type="button" data-k="tilt" aria-pressed="false">Tilt</button>
+        <button type="button" data-k="spd" aria-pressed="false">Speed</button>
+        <button type="button" data-k="turn" aria-pressed="false">Turning</button>
+        <button type="button" data-k="rec" aria-pressed="false">Mid-walk fault</button>
       </div>
     </div>
-    <canvas id="solo-cv" aria-label="Bar chart comparing original, edited and RL reference networks on four and three legs"></canvas>
+    <canvas id="solo-cv" aria-label="Original, edited and RL reference on four and three legs"></canvas>
     <p class="src" id="solo-src"></p>
   </div>
 
   <div class="two flip">
     <div class="board">
-      <canvas id="gait-cv" aria-label="Foot contact diagrams over two seconds: original on four legs, original with the front-left leg locked, edited with the leg locked"></canvas>
-      <p class="src"><b>Measured.</b> Foot contacts over 2 s at 0.3 m/s (bar = foot on the ground). In the trot the front-left and hind-right feet share a stance; with the front-left gone, the original stands on the hind-right foot alone and the folded leg (red) hits the floor every cycle. The edited gait gives the front-right leg two short swings per cycle.</p>
+      <canvas id="gait-cv" aria-label="Foot contacts over two seconds"></canvas>
+      <p class="src"><b>Measured</b> foot contacts at 0.3 m/s. Red: the broken leg touching the floor.</p>
     </div>
     <div class="prose">
-      <h3>Why the original limps</h3>
-      <p>Contacts binned by gait phase showed the problem precisely. In a trot the front-left and hind-right feet carry the robot together. Without the front-left leg, for half of every cycle the robot stands on the hind-right foot alone, 26 cm from its centre of mass, and tips onto the broken corner. The network then uses the folded leg as a skid.</p>
-      <p>So the edit has to move the centre of mass, not just change the timing: shift the three working feet forward and to the left so that the body sits inside their triangle, and re-time the front-right leg so that it is on the ground when the hind-right one would be alone.</p>
+      <h3>Why it limps</h3>
+      <p>In a trot the front-left and hind-right feet carry the robot together. Without the front-left, the robot tips onto the broken corner every cycle.</p>
+      <h3>The edit</h3>
+      <ul>
+        <li>Shift the three feet so the body sits inside their triangle, and hide the shift from the network.</li>
+        <li>Re-time the front-right leg with 40 bump units over the gait phase.</li>
+        <li>v2: H1-style heading hold, with memory in the dead leg's action channels.</li>
+      </ul>
     </div>
   </div>
 
-  <h3>The path, failed attempts included</h3>
+  <h3>How it went</h3>
   <ol class="path">
-    <li class="diag"><span class="tag">measure</span><h4>Where does the weight go?</h4><p>Contacts by gait phase: the hind-right foot is alone during the front-left's stance, and the robot falls onto the broken corner every cycle.</p></li>
-    <li class="ko"><span class="tag">fails</span><h4>Change only the timing.</h4><p>Front-right never swings, a short front-right swing, a three-beat gait: the broken leg still touches the floor 41–100 % of the time. Timing alone does not move the centre of mass.</p></li>
-    <li class="ok"><span class="tag">works</span><h4>A three-leg stance exists.</h4><p>Shift the three feet 6 cm forward and 6–11 cm left. With fixed joint targets and no network at all the robot stands level on three legs (8° tilt): the posture is right.</p></li>
-    <li class="ko"><span class="tag">fails</span><h4>Lie to the network instead.</h4><p>Tell it that its joints, or gravity, are displaced, so that it moves the legs itself: it keeps limping (30–33 %).</p></li>
-    <li class="ko"><span class="tag">fails</span><h4>A textbook design.</h4><p>Front-right foot under the body, from an inverted-pendulum model: it leans on the broken leg 64 % of the time with 38° of tilt. The network's balance reactions, trained for four legs, fight it.</p></li>
-    <li class="idea"><span class="tag">idea</span><h4>Hide the posture from the network.</h4><p>Added at the output, the posture shift comes back through the <code>last_action</code> input and the network pulls it back. Subtracting it from the joint-position and last-action inputs, a change of coordinates, lets the network keep walking around the new posture.</p></li>
-    <li class="ok"><span class="tag">half</span><h4>Front-right double stance.</h4><p>The front-right leg replays its own stance twice per cycle, with two short swings instead of one long one. Level body, steps on three legs, but it walks backwards or not at all.</p></li>
-    <li class="ok"><span class="tag">works</span><h4>Command trim and a yaw-rate loop.</h4><p>On three legs the network moves far slower than it "thinks": adding 0.7 m/s to the forward command it sees gives about 0.2 m/s. A yaw-rate loop and small side/yaw trims reduce the turn the asymmetric gait produces. This is the final design.</p></li>
-    <li class="diag"><span class="tag">ablate</span><h4>Every part is needed.</h4><p>Without hiding the posture the broken leg is on the floor 74 % of the time; without the posture shift 75 %; without the front-right re-timing the robot stays level but barely moves (0.06 m/s).</p></li>
-    <li class="ko"><span class="tag">rejected</span><h4>Reflexes to get up after a fault.</h4><p>A tilt feedback and threshold "get-up" reflexes, meant to lift the robot off the broken leg when it breaks mid-walk: they tip it over (6 / 9 and 9 / 9 falls) or change nothing.</p></li>
+    <li class="ko"><span class="tag">fails</span><h4>Change only the timing: still leans on the leg (41–100 %).</h4></li>
+    <li class="ok"><span class="tag">works</span><h4>Shift the feet: a static three-leg stance exists.</h4></li>
+    <li class="ko"><span class="tag">fails</span><h4>Lie to the network about its joints or gravity.</h4></li>
+    <li class="ko"><span class="tag">fails</span><h4>Inverted-pendulum foot placement: 64 % leaning.</h4></li>
+    <li class="idea"><span class="tag">idea</span><h4>Hide the posture shift from the network's inputs.</h4></li>
+    <li class="ok"><span class="tag">works</span><h4>Front-right double stance, command trim, yaw loop.</h4></li>
+    <li class="diag"><span class="tag">ablate</span><h4>Each part is needed.</h4></li>
+    <li class="ok"><span class="tag">v2</span><h4>Heading hold in the dead leg's channels: 9 → 17 of 30 goals.</h4></li>
   </ol>
-
-  <div class="two">
-    <div class="board">
-      <pre class="code"><span class="cm"># inputs it reads: front-left joints q, dq; gyro; command; gait clock</span>
-<span class="y">g</span> = w · [q<sub>FL</sub>, dq<sub>FL</sub>]          <span class="cm"># ≈ 1 when the leg is locked</span>
-<span class="c">F</span> = clamp((g − 0.55) / 0.30, 0, 1)  <span class="cm"># fault flag</span>
-<span class="c">G</span> = F and gait clock running       <span class="cm"># gate</span>
-
-<span class="cm"># what the original units now receive (first layer)</span>
-ω<sub>z</sub>'  = ω<sub>z</sub> + 0.5 (ω<sub>z</sub> − gyro<sub>z</sub>)       <span class="cm"># always on</span>
-q'   = q − 0.3 A·g                 <span class="cm"># hide the posture</span>
-a'   = last_action − A·g
-cmd' = cmd + (0.7, 0.2, 0.2)·g     <span class="cm"># trim</span>
-
-<span class="cm"># output</span>
-a = net(obs') + <span class="c">F</span>·A + <span class="c">G</span>·D<sub>FR</sub>(φ)
-<span class="cm"># A: feet 6 cm forward, 6–11 cm left</span>
-<span class="cm"># D_FR: front-right re-timing, 40 bell units</span></pre>
-    </div>
-    <div class="prose">
-      <h3>How it is written in the weights</h3>
-      <p>A first layer cannot multiply, so a constant shift that applies <em>only when the leg is broken</em> is written as a rank-1 update of the six front-left joint columns: the fault signal <code>g</code> is itself a linear function of those inputs. The price is a small leak on four legs, where <code>g</code> is not exactly zero.</p>
-      <p>46 / 6 / 5 hidden units are freed by the same least-squares fold as in the H1_2 edit (action error rms 0.001) and rewritten as the fault flag, the gate, and 40 bump units that synthesise the front-right re-timing over the gait phase.</p>
-      <p>Same shape, same file format; the builder turns the original ONNX into the edited one in 6 s, bit for bit reproducible. <b>Fitted to data, declared:</b> the fault-signal weights, the original's own phase-averaged front-right pattern, and the fold. The design parameters were found by hand over about a hundred prototype runs in the same simulator, which is why the results below use seeds never seen during the design.</p>
-    </div>
-  </div>
 
   <div class="table">
     <table>
-      <thead><tr><th>MuJoCo, 11 commands × 10 held-out seeds × 20 s</th><th>falls</th><th>broken leg on floor</th><th>speed / cmd</th><th>lateral drift</th><th>heading, 20 s</th><th>turn / cmd</th><th>tilt</th></tr></thead>
+      <thead><tr><th>Held-out, 110 episodes each</th><th>falls</th><th>leg on floor</th><th>speed / cmd</th><th>lateral drift</th><th>heading, 20 s</th></tr></thead>
       <tbody>
-        <tr><td>Original, four legs</td><td>0/110</td><td>—</td><td>0.99</td><td>1.0 cm/s</td><td>3°</td><td>0.98</td><td>0.5°</td></tr>
-        <tr><td>Edited v1, four legs</td><td>0/110</td><td>—</td><td>1.04</td><td>1.5 cm/s</td><td>4°</td><td>0.98</td><td>0.8°</td></tr>
-        <tr><td>Original, front-left locked</td><td class="o">0/110</td><td class="o">38.2 %</td><td class="o">0.93</td><td class="o">26.0 cm/s</td><td class="o">48°</td><td class="o">0.50</td><td class="o">19.8°</td></tr>
-        <tr><td><b>Edited v1, front-left locked</b></td><td class="e">0/110</td><td class="e">7.0 %</td><td class="e">0.63</td><td class="e">9.6 cm/s</td><td class="e">37°</td><td class="e">0.38</td><td class="e">15.1°</td></tr>
-        <tr><td><b>Edited v2, front-left locked</b></td><td class="e">0/110</td><td class="e">10.2 %</td><td class="e">0.58</td><td class="e">6.1 cm/s</td><td class="e">14°</td><td class="e">0.37</td><td class="e">—</td></tr>
-        <tr><td>Edited v2, four legs</td><td>0/110</td><td>—</td><td>1.05</td><td>2.1 cm/s</td><td>5°</td><td>0.97</td><td>—</td></tr>
-        <tr><td>RL fine-tuned on three legs (trained reference)</td><td>0/110</td><td>0.0 %</td><td>0.89</td><td>3.3 cm/s</td><td>9°</td><td>0.90</td><td>3.1°</td></tr>
+        <tr><td>Original, 4 legs</td><td>0</td><td>—</td><td>0.99</td><td>1.0 cm/s</td><td>3°</td></tr>
+        <tr><td>Original, leg locked</td><td class="o">0</td><td class="o">38 %</td><td class="o">0.93</td><td class="o">26 cm/s</td><td class="o">48°</td></tr>
+        <tr><td><b>Edited v1, leg locked</b></td><td class="e">0</td><td class="e">7 %</td><td class="e">0.63</td><td class="e">9.6 cm/s</td><td class="e">37°</td></tr>
+        <tr><td><b>Edited v2, leg locked</b></td><td class="e">0</td><td class="e">10 %</td><td class="e">0.58</td><td class="e">6.1 cm/s</td><td class="e">14°</td></tr>
+        <tr><td>Edited v2, 4 legs</td><td>0</td><td>—</td><td>1.05</td><td>2.1 cm/s</td><td>5°</td></tr>
+        <tr><td>RL fine-tune (reference)</td><td>0</td><td>0 %</td><td>0.89</td><td>3.3 cm/s</td><td>9°</td></tr>
       </tbody>
-      <caption>Each seed draws friction 0.7–1.1, a mass offset and the initial pose. Speed, drift and heading are averaged over the four forward commands (0.2–0.5 m/s); the edited network walks at about 0.2 m/s for all of them. The original's 0.93 on three legs is reached while dragging the broken leg. The RL reference is the original fine-tuned with PPO for 600 iterations on the locked leg: an upper bound, not part of the edit.</caption>
     </table>
-  </div>
-
-  <div class="media-grid">
-    <figure>
-      <video src="assets/solo/leg_locks_recovers.mp4" poster="assets/solo/leg_locks_recovers.jpg" controls muted playsinline loop preload="none"></video>
-      <figcaption>The leg locks while walking and the edited network gets onto three legs. This happens in 10 of 50 runs, all with the leg locking early in its swing, unloaded. The original never does (0 / 50), the RL reference always (50 / 50).</figcaption>
-    </figure>
-    <figure>
-      <video src="assets/solo/leg_locks_fails.mp4" poster="assets/solo/leg_locks_fails.jpg" controls muted playsinline loop preload="none"></video>
-      <figcaption>The same fault at another moment of the gait: the edited network ends up leaning on the broken leg, more than the original does (40–48 % of the time against 29–33 %).</figcaption>
-    </figure>
-    <figure>
-      <video src="assets/solo/edited_vs_rl_reference.mp4" poster="assets/solo/edited_vs_rl_reference.jpg" controls muted playsinline loop preload="none"></video>
-      <figcaption>Edited network (left) against the network fine-tuned with RL on three legs (right): the trained reference is faster, straighter and more level.</figcaption>
-    </figure>
-  </div>
-
-  <div class="board">
-    <canvas id="fric-cv" aria-label="Forward speed and broken-leg contact against floor friction for the original, edited and RL reference networks"></canvas>
-    <div class="legend">
-      <span><i style="background:var(--orig)"></i>original, 3 legs</span>
-      <span><i style="background:var(--edit);opacity:.5"></i>edited v1, 3 legs</span>
-      <span><i style="background:var(--edit)"></i>edited v2, 3 legs</span>
-      <span><i style="background:none;border-top:2px dashed var(--edit)"></i>edited v2, 4 legs</span>
-      <span><i style="background:var(--unit)"></i>RL reference, 3 legs</span>
-    </div>
-    <p class="src"><b>Measured.</b> Command 0.3 m/s, fixed friction, 5 seeds × 20 s per point, no falls anywhere. v1 works between 0.8 and 1.0, v2 between 0.7 and 0.9. Below that range they walk backwards (a second, reversed gait mode); above it they lean on the broken leg about half of the time. On four legs both walk normally at every friction.</p>
-  </div>
-
-
-  <h3>v2 · Hold the heading, reach the goal</h3>
-  <div class="two">
-    <div class="prose">
-      <p>With a broken leg the robot is allowed to limp; what matters is that it gets where it is sent. v1 could not: without any memory of where it was pointing it drifted by 37° in 20 s, up to 86°. v2 ports the H1_2 heading hold into the SOLO network: an integrator of the heading error and its integral, fed back as a turn command the original network understands.</p>
-      <p>The integrator needs memory, and on four legs all twelve action channels are in use. With the front-left leg locked, though, its three channels drive a dead leg. v2 stores the registers there, but only when the fault flag is on:</p>
-      <ul>
-        <li><b>Reading.</b> The original units stop reading <code>last_action[FL]</code> and read a ridge prediction of it from the other 44 inputs. Replacing it with a constant, as on H1_2, broke four-leg walking (heading drift 2° → 32°). <span class="tag-fit">fitted</span></li>
-        <li><b>Writing.</b> The FL output rows are rebuilt from four gated last-layer units: on four legs a readout of the original FL command, on three legs exactly the registers. <span class="tag-fit">fitted readout</span></li>
-      </ul>
-      <p>A lateral hold, tried on top, made things worse: its velocity readout was as wrong as the drift it had to correct.</p>
-    </div>
-    <pre class="code"><span class="cm"># v2 circuit (dt = 0.02 s), active when F = 1</span>
-rate = −(ω<sub>y</sub> g<sub>y</sub> + ω<sub>z</sub> g<sub>z</sub>)(1 + g<sub>x</sub>²)
-act  = F and |ω<sub>z,cmd</sub>| ≈ 0
-<span class="c">θ'</span>   = clamp(θ + dt (ω<sub>z,cmd</sub> − rate), ±0.20·act)
-<span class="c">I'</span>   = clamp(I + dt (θ + 0.1), ±0.34·act)
-<span class="c">y</span>    = min(3θ' + 1.5 I', 1.11 rad/s)
-
-<span class="cm"># memory: FL action channels (dead leg)</span>
-<span class="cm"># read back through last_action</span>
-ω<sub>z</sub> seen by the network = ω<sub>z,cmd</sub> + y
-
-<span class="cm"># operators: O5 circuit, O7 registers with a</span>
-<span class="cm"># fitted read-back, O9 FL rows, O1 fold 62/15/14</span></pre>
   </div>
 
   <div class="board">
     <div class="controls">
       <div class="seg" role="group" aria-label="Who steers" id="goal-mode">
-        <button type="button" data-k="A" aria-pressed="true">Network only (fixed command)</button>
-        <button type="button" data-k="B" aria-pressed="false">Joystick steering</button>
+        <button type="button" data-k="A" aria-pressed="true">Network only</button>
+        <button type="button" data-k="B" aria-pressed="false">Joystick</button>
       </div>
       <div class="seg" role="group" aria-label="Goal" id="goal-goal">
-        <button type="button" data-k="2m" aria-pressed="false">Goal 2 m</button>
-        <button type="button" data-k="4m" aria-pressed="true">Goal 4 m</button>
-        <button type="button" data-k="3m_1m" aria-pressed="false">Goal (3 m, 1 m)</button>
+        <button type="button" data-k="2m" aria-pressed="false">2 m</button>
+        <button type="button" data-k="4m" aria-pressed="true">4 m</button>
+        <button type="button" data-k="3m_1m" aria-pressed="false">(3, 1) m</button>
       </div>
     </div>
-    <canvas id="goal-cv" aria-label="Top views of the paths walked towards a goal by the original, edited v1, edited v2 and RL reference networks on three legs"></canvas>
+    <canvas id="goal-cv" aria-label="Paths towards a goal for four networks on three legs"></canvas>
     <p class="src" id="goal-src"></p>
   </div>
 
   <div class="table">
     <table>
-      <thead><tr><th>Goals reached, front-left leg locked</th><th>network only<br>2 m · 4 m · (3, 1)</th><th>total</th><th>joystick<br>2 m · 4 m · (3, 1)</th><th>total</th></tr></thead>
+      <thead><tr><th>Goals reached, leg locked</th><th>network only</th><th>joystick</th></tr></thead>
       <tbody>
-        <tr><td>Original</td><td class="o">0 · 0 · 0</td><td class="o">0 / 30</td><td class="o">0 · 0 · 0</td><td class="o">0 / 30</td></tr>
-        <tr><td>Edited v1</td><td>4 · 3 · 2</td><td>9 / 30</td><td>9 · 9 · 9</td><td>27 / 30</td></tr>
-        <tr><td><b>Edited v2 (heading hold)</b></td><td class="e">7 · 5 · 5</td><td class="e">17 / 30</td><td class="e">9 · 9 · 9</td><td class="e">27 / 30</td></tr>
-        <tr><td>RL fine-tuned on three legs (trained reference)</td><td>8 · 5 · 7</td><td>20 / 30</td><td>10 · 10 · 10</td><td>30 / 30</td></tr>
-        <tr><td>Edited v2 on four legs</td><td>10 · 10 · 10</td><td>30 / 30</td><td>10 · 10 · 10</td><td>30 / 30</td></tr>
+        <tr><td>Original</td><td class="o">0 / 30</td><td class="o">0 / 30</td></tr>
+        <tr><td>Edited v1</td><td>9 / 30</td><td>27 / 30</td></tr>
+        <tr><td><b>Edited v2</b></td><td class="e">17 / 30</td><td class="e">27 / 30</td></tr>
+        <tr><td>RL fine-tune (reference)</td><td>20 / 30</td><td>30 / 30</td></tr>
       </tbody>
-      <caption>10 held-out seeds per goal; success = within 0.3 m of the goal before 2 × distance / 0.2 m/s. Network only: the command is 0.3 m/s straight at the goal and never changes, so only what is inside the network can keep the robot on course. Joystick: an external operator turns towards the goal (ω<sub>z</sub> = bearing error, at most 0.5 rad/s). v2 times to the goal: 8.2 / 16.9 / 13.5 s. Misses come from a sideways crab of 0.1–0.8 m in 20 s, which v2 does not correct, and from three seeds (two of them on the highest friction) that fall onto the broken leg.</caption>
     </table>
   </div>
 
   <div class="media-grid">
     <figure>
       <video src="assets/solo/goal_4m_network_only.mp4" poster="assets/solo/goal_4m_network_only.jpg" controls muted playsinline loop preload="none"></video>
-      <figcaption>Goal at 4 m, network only, front-left leg locked: original, edited v1, edited v2.</figcaption>
+      <figcaption>Goal at 4 m, network only: original, v1, v2.</figcaption>
     </figure>
     <figure>
       <video src="assets/solo/goal_3m_1m_joystick.mp4" poster="assets/solo/goal_3m_1m_joystick.jpg" controls muted playsinline loop preload="none"></video>
-      <figcaption>Goal at (3 m, 1 m) with joystick steering: the original circles the goal, edited v2 walks to it.</figcaption>
+      <figcaption>Goal (3, 1) m with a joystick: original circles, v2 arrives.</figcaption>
+    </figure>
+    <figure>
+      <video src="assets/solo/leg_locks_recovers.mp4" poster="assets/solo/leg_locks_recovers.jpg" controls muted playsinline loop preload="none"></video>
+      <figcaption>Leg breaks mid-walk and the edit recovers (10 of 50 runs).</figcaption>
+    </figure>
+    <figure>
+      <video src="assets/solo/edited_vs_rl_reference.mp4" poster="assets/solo/edited_vs_rl_reference.jpg" controls muted playsinline loop preload="none"></video>
+      <figcaption>Edited (left) vs RL fine-tune (right).</figcaption>
     </figure>
   </div>
 
-  <div class="lesson">
-    <p class="l-seen"><b>Seen</b>A network trained only on four legs can be rewritten to walk on three, without a gradient step, by moving its posture, hiding that move from it, and re-timing one leg.</p>
-    <p class="l-got"><b>Understood</b>The hard part is not the gait but the attractors: the edited gait has several stable modes (three-leg walk, backwards walk, leaning on the broken leg) and friction or the moment of the fault decides which one wins.</p>
-    <p class="l-next"><b>Not done</b>Simulation only, one leg broken in one way (a passive leg still collapses, 55 / 55), a sideways crab that nothing corrects, a narrow friction band (0.7–0.9 for v2), recovery from a fault mid-walk in 10 of 50 runs. Next: a transformer backbone that switches between four and three legs online, to see what attention does with the broken leg.</p>
+  <div class="board">
+    <canvas id="fric-cv" aria-label="Speed and broken-leg contact against floor friction"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--orig)"></i>original</span>
+      <span><i style="background:var(--edit);opacity:.5"></i>v1</span>
+      <span><i style="background:var(--edit)"></i>v2</span>
+      <span><i style="background:none;border-top:2px dashed var(--edit)"></i>v2, 4 legs</span>
+      <span><i style="background:var(--unit)"></i>RL fine-tune</span>
+    </div>
+    <p class="src"><b>Measured.</b> The edits work in a narrow friction band; outside it the robot walks backwards or leans on the leg.</p>
   </div>
-  <p class="src">Code, policies, every evaluation and the attempts table: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/tree/main/experiments/solo_three_legs">experiments/solo_three_legs</a>. SOLO-12 description from Gepetto/example-robot-data (BSD), Open Dynamic Robot Initiative.</p>
+  <p class="src">Code, policies and every evaluation: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/tree/main/experiments/solo_three_legs">experiments/solo_three_legs</a>.</p>
 </section>
 
 <!-- ============================================================ METHOD -->
 <section class="step" id="method" aria-labelledby="t-method">
-  <p class="eyebrow"><i style="background:var(--circuit)"></i>Method, formally</p>
-  <h2 id="t-method">Nine operators, six steps, four invariants.</h2>
-  <div class="two">
-    <div class="prose">
-      <p>Every edit on this page is a composition of a small set of operations on the weights of an ELU MLP. Each operation changes the weights in closed form and states what it preserves; what it does not guarantee is measured. Writing the method this way makes an edit checkable: you can read <code>weight_edit.json</code> and know, for every changed unit, which operator wrote it and whether its numbers were exact, solved, fitted or searched by hand.</p>
-    </div>
-    <pre class="code"><span class="cm"># the network (ELU MLP, L hidden layers)</span>
-p₁     = W₀ x̂ + b₀          h₁ = σ(p₁)
-p<sub>ℓ+1</sub>   = W<sub>ℓ</sub> h<sub>ℓ</sub> + b<sub>ℓ</sub>        h<sub>ℓ+1</sub> = σ(p<sub>ℓ+1</sub>)
-a      = W<sub>L</sub> h<sub>L</sub> + b<sub>L</sub>
-σ(u)   = u  (u &gt; 0),   eᵘ − 1  (u ≤ 0)
-
-<span class="cm"># p = "before the fold", h = "after the fold"</span>
-<span class="cm"># 𝒟 = recorded observations (held-out for checks)</span></pre>
-  </div>
+  <p class="eyebrow"><i style="background:var(--circuit)"></i>Method</p>
+  <h2 id="t-method">Nine operators, four rules.</h2>
 
   <div class="inv">
-    <div><b>I1</b><span>Same shape: every W′, b′ has the shape of W, b. The deploy code does not change.</span></div>
-    <div><b>I2</b><span>No gradient on the result. Parameters are exact, solved, fitted or hand-searched, and declared as such.</span></div>
-    <div><b>I3</b><span>Reproducible: a deterministic builder, original in, edited out, sha256 of both recorded.</span></div>
-    <div><b>I4</b><span>The original file is untouched and is the baseline of every test.</span></div>
+    <div><b>I1</b><span>Same shape and file format.</span></div>
+    <div><b>I2</b><span>No gradient on the result; every fitted parameter declared.</span></div>
+    <div><b>I3</b><span>Deterministic builder: original in, edited out.</span></div>
+    <div><b>I4</b><span>Original untouched; it is the baseline.</span></div>
   </div>
 
-  <h3>The operators</h3>
   <div class="ops">
     <div class="op"><span class="n">O1</span><h4>Fold a redundant unit</h4>
-      <pre>h_j ≈ c_j + Σ α_k h_k   (ridge, 𝒟)
-W_ℓ[:,k] += W_ℓ[:,j] α_k
-b_ℓ      += W_ℓ[:,j] c_j
-unit j cleared → free</pre>
-      <p><b>Keeps</b> the next pre-activation up to <code>W_ℓ[:,j] r_j</code>; the fold's action error is measured.</p></div>
+      <pre>h_j ≈ c_j + Σ α_k h_k   (ridge)
+W_ℓ[:,k] += W_ℓ[:,j] α_k</pre>
+      <p>Frees a unit; error measured.</p></div>
     <div class="op"><span class="n">O2</span><h4>Retire an idle unit</h4>
-      <pre>u_j = std(h_j) · ‖W_ℓ[:,j]‖
-if u_j &lt; 10⁻³:
-  b_ℓ += W_ℓ[:,j] · E[h_j]
-  unit j cleared → free</pre>
-      <p><b>Keeps</b> the next pre-activation up to std <code>u_j</code>. O1 with α = 0.</p></div>
-    <div class="op"><span class="n">O3</span><h4>Re-coordinatise the inputs</h4>
-      <pre>original sees  x̃ = T x + t
-W₀′ = W₀ T
-b₀′ = b₀ + W₀ t</pre>
-      <p><b>Exact.</b> Trims, rate loops, disconnecting an input, reading a register as a command. On a subset of rows: those units only.</p></div>
+      <pre>b_ℓ += W_ℓ[:,j] · E[h_j]</pre>
+      <p>Exact up to its tiny variation.</p></div>
+    <div class="op"><span class="n">O3</span><h4>Re-coordinatise inputs</h4>
+      <pre>W₀′ = W₀ T,  b₀′ = b₀ + W₀ t</pre>
+      <p>Exact. Trims, loops, sign fixes.</p></div>
     <div class="op"><span class="n">O4</span><h4>Gated input shift</h4>
-      <pre>x̃ = x + s · g(x),  g = wᵀx + w₀
-W₀′ = W₀ + (W₀ s) wᵀ
-b₀′ = b₀ + (W₀ s) w₀</pre>
-      <p><b>Exact</b> where g = 1. The gate must be linear in x (a first layer cannot multiply); it leaks as <code>(W₀ s)·g</code> where g ≠ 0.</p></div>
-    <div class="op"><span class="n">O5</span><h4>Circuit primitives</h4>
-      <pre>pass   σ(x+B) − B
-|x|    (σ(Sx) + σ(−Sx)) / S
-clamp  (σ(S(x+L)) − σ(S(x−L)))/S − L
-x²     2s² (σ(x/s) + σ(−x/s))
-gate   (σ(Sz) − σ(S(z−1))) / S
-bump   σ(β(cos(ψ−ψᵢ) − cos α))</pre>
-      <p><b>Error</b> ≤ 1/S, or ≈ |x|³/3s for x². One layer of depth per stage: depth bounds what can be chained.</p></div>
+      <pre>W₀′ = W₀ + (W₀ s) wᵀ</pre>
+      <p>Exact where the linear gate is 1.</p></div>
+    <div class="op"><span class="n">O5</span><h4>ELU primitives</h4>
+      <pre>pass · |x| · clamp · x² · product · gate · bump</pre>
+      <p>Error ≤ 1/S.</p></div>
     <div class="op"><span class="n">O6</span><h4>Shift before the fold</h4>
-      <pre>p(x₀(ψ)) + Δ(ψ) = p(x*)   ∀ψ
-Δ(ψ) = Cᵀ φ(ψ)     (N bumps)
-Φ C = D            (N × N, no fit)</pre>
-      <p><b>Exact</b> at the nodes, interpolated between. Restores values <em>and</em> slopes σ′(p): the gains come back.</p></div>
-    <div class="op"><span class="n">O7</span><h4>Registers in the actions</h4>
-      <pre>a_t[R]  = κ · F(z_{t−1}, x_t)
-z_{t−1} = a_{t−1}[R] / κ
-original reads, instead of a_{t−1}[R]:
-  a constant m_R          (exact)
-  or M x_{−R}             (fitted)</pre>
-      <p><b>Gives memory</b> to a network without state. The constant is enough on H1_2; SOLO v2 needs the fitted predictor, or four-leg walking breaks.</p></div>
+      <pre>Φ C = D   (N bump nodes)</pre>
+      <p>Restores values and gains.</p></div>
+    <div class="op"><span class="n">O7</span><h4>Registers in actions</h4>
+      <pre>a_t[R] = κ F(z_{t−1}, x_t)</pre>
+      <p>Memory for a network without state.</p></div>
     <div class="op"><span class="n">O8</span><h4>Gated output injection</h4>
-      <pre>a′ = f(x) + Σ G_k(x) · d_k(x)</pre>
-      <p><b>Exact on values, not on gains.</b> Safe only if the original units already sit at the right operating point; otherwise O3, O4 or O6 first.</p></div>
-    <div class="op"><span class="n">O9</span><h4>Gated output-row replacement</h4>
-      <pre>a′_R = (1 − F) · L(h_{L−1})     (readout, fitted)
-     + F · new_R(x)
-gate: σ(L_j + B − S·F) − σ(B − S·F)</pre>
-      <p><b>Exactly</b> the new content when F = 1; the readout residual is measured when F = 0. Lets a dead leg's channels carry registers.</p></div>
+      <pre>a′ = f(x) + Σ G_k d_k</pre>
+      <p>Values, not gains.</p></div>
+    <div class="op"><span class="n">O9</span><h4>Output-row replacement</h4>
+      <pre>a′_R = (1−F) L(h) + F·new_R</pre>
+      <p>Reuses a dead joint's channels.</p></div>
   </div>
 
   <div class="table">
     <table class="opmap">
-      <thead><tr><th>Where each operator was used</th><th>O1</th><th>O2</th><th>O3</th><th>O4</th><th>O5</th><th>O6</th><th>O7</th><th>O8</th><th>O9</th></tr></thead>
+      <thead><tr><th>Used in</th><th>O1</th><th>O2</th><th>O3</th><th>O4</th><th>O5</th><th>O6</th><th>O7</th><th>O8</th><th>O9</th></tr></thead>
       <tbody>
-        <tr><td>H1_2 heading hold</td><td>20/9/5 units</td><td>·</td><td>ω<sub>z</sub> ← registers</td><td>·</td><td>rate, gate, clamps</td><td>·</td><td>wrists 25, 26</td><td>·</td><td>·</td></tr>
-        <tr><td>Quadrotor yaw</td><td>·</td><td>28 + 5</td><td>freeze 277, yaw error</td><td>·</td><td>23 bumps, yaw cmd</td><td>215 units, 23×23</td><td>·</td><td>residuals, limiter</td><td>·</td></tr>
-        <tr><td>SOLO-12 three legs</td><td>46/6/5 units</td><td>·</td><td>yaw-rate loop</td><td>posture, trims</td><td>flag, gate, 40 bumps; v2 integrator</td><td>·</td><td>v2: dead leg, fitted read-back</td><td>F·A, G·D<sub>FR</sub></td><td>v2: FL rows</td></tr>
+        <tr><td>H1_2</td><td>✓</td><td>·</td><td>✓</td><td>·</td><td>✓</td><td>·</td><td>✓</td><td>·</td><td>·</td></tr>
+        <tr><td>Drone</td><td>·</td><td>✓</td><td>✓</td><td>·</td><td>✓</td><td>✓</td><td>·</td><td>✓</td><td>·</td></tr>
+        <tr><td>SOLO</td><td>✓</td><td>·</td><td>✓</td><td>✓</td><td>✓</td><td>·</td><td>✓</td><td>✓</td><td>✓</td></tr>
       </tbody>
-      <caption>The drone's failed "add the missing thrust at the output" was an O8 where an O6 was needed. In SOLO the O8 works because O4 has already moved the original units back to their four-leg operating point; without O4 the robot leans on the broken leg 74 % of the time.</caption>
     </table>
   </div>
-
-  <h3>The procedure</h3>
-  <div class="loop">
-    <div class="card"><span class="n">P1</span><h4>Read</h4><p>Column norms, normaliser means, the inputs the network barely reads. No simulation yet.</p></div>
-    <div class="card"><span class="n">P2</span><h4>Probe</h4><p>Sweep one variable, freeze the rest; equilibria and Jacobians at the operating points. Is it the value, the operating point or the gain that is wrong?</p></div>
-    <div class="card"><span class="n">P3</span><h4>Make room</h4><p>Usage census; O2 for idle units, O1 for redundant ones; report the fold error.</p></div>
-    <div class="card"><span class="n">P4</span><h4>Prototype</h4><p>Wrap the unchanged network with the intended input and output changes and test it in simulation before compiling anything.</p></div>
-    <div class="card"><span class="n">P5</span><h4>Compile</h4><p>Write the design with O3–O9. Checks: same shapes, ONNX against numpy, compiled against prototype.</p></div>
-    <div class="card"><span class="n">P6</span><h4>Validate</h4><p>Fixed protocol, the original as baseline, the nominal condition too, ablations, seeds never used during design.</p></div>
-  </div>
-  <p class="src">Full statement, with the guarantees and the per-example tables: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/blob/main/METHOD.md">METHOD.md</a>.</p>
+  <p class="src">Read · probe · make room · prototype · compile · validate. Full statement: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/blob/main/METHOD.md">METHOD.md</a>.</p>
 </section>
 
 <!-- ============================================================ LIMITS -->
 <section class="step" id="limits" aria-labelledby="t-limits">
   <p class="eyebrow"><i style="background:var(--orig)"></i>Limits</p>
-  <h2 id="t-limits">What this does not show.</h2>
+  <h2 id="t-limits">What this does not show yet.</h2>
   <div class="prose">
     <ul>
-      <li><b>Real-robot statistics are still coming.</b> The edited H1_2 and drone networks run on the real robots, but the measurements on this page come from simulation: a Python replica of the H1_2 controller, a fast and a full simulator for the drone, without sensor noise. A systematic real-robot campaign is under way to collect a larger pool of trials; until it is done we do not report hardware success rates.</li>
-      <li><b>SOLO-12 is simulation only.</b> One leg broken in one way, a narrow friction band, a slow gait that crabs sideways; v2 reaches 17 of 30 goals on its own, the RL fine-tuned reference 20.</li>
-      <li><b>Robustness.</b> The original networks were trained with domain randomisation; the edits are built on one model. How much robustness survives has not been measured systematically yet.</li>
-      <li><b>Hand-tuned parameters.</b> Thresholds, gains, number and shape of the sensor units were chosen with few attempts. They work; how far they are from the edges is mostly unknown.</li>
-      <li><b>Side effects.</b> H1_2 gives up three wrist joints as memory; the drone's limiter is tuned to one hover thrust and one motor curve.</li>
-      <li><b>Statistics.</b> The simulators are nearly deterministic: a few repetitions measure repeatability, not robustness. No confidence intervals are claimed.</li>
+      <li>Hardware statistics: the real-robot campaign is still running.</li>
+      <li>Robustness beyond the tested conditions; SOLO is simulation only.</li>
+      <li>Hand-tuned parameters with few attempts.</li>
+      <li>Side effects: H1_2 gives up three wrist joints as memory.</li>
     </ul>
   </div>
 </section>
@@ -650,9 +457,8 @@ gate: σ(L_j + B − S·F) − σ(B − S·F)</pre>
       <p class="mark-name">R.E.D. Pony</p>
       <p class="mark-sub">LLM editing of trained networks</p>
     </div>
-    <p><b>Project R.E.D. Pony</b> · <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net">github.com/AntoBuo-Dev/red-pony-llm-editing-net</a></p>
-    <p>H1_2 source policy, robot description and controller conventions: <a href="https://github.com/gaetanotorella/H1_2_Squat_Locomotion_RL">H1_2_Squat_Locomotion_RL</a> (Gaetano Torella, University of Naples Federico II, PRISMA Lab), Apache-2.0. SOLO-12: Open Dynamic Robot Initiative, description from Gepetto/example-robot-data (BSD).</p>
-    <p>Edits designed and carried out with an LLM agent (Claude), tested in simulation and on the real robots. Numbers on this page come from the experiment logs; drawings marked as schematic are illustrations.</p>
+    <p><a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net">github.com/AntoBuo-Dev/red-pony-llm-editing-net</a></p>
+    <p>H1_2 policy: <a href="https://github.com/gaetanotorella/H1_2_Squat_Locomotion_RL">H1_2_Squat_Locomotion_RL</a> (G. Torella, PRISMA Lab), Apache-2.0. SOLO-12: Open Dynamic Robot Initiative. Edits made with Claude.</p>
   </div>
 </footer>
 

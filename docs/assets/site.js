@@ -194,9 +194,9 @@
     free1.slice(0, 23).forEach((u, i) => circ.push({ a: ['l1', u], b: ['l2', free2[i % 5]], ph: r() }));
     free2.forEach((u, i) => circ.push({ a: ['l2', u], b: ['out', i % 2 ? 0 : 3], ph: r() }));
     const caps = [
-      'Schematic of the drone hover network: 17 inputs, two layers of 512 units, 4 outputs. Unit counts are real, positions are not. Bright units vary across 200 000 states; 413 and 490 dim ones are practically constant.',
-      'Idle units are freed: each one outputs a constant, so its contribution is moved into the next bias and its connections are cleared. The network computes the same thing. The final drone edit retired 28 + 5 units.',
-      'A circuit is written into the freed units (violet): 23 yaw sensors fed by the attitude inputs, and the paths to the yaw-rate and thrust outputs. Same layer sizes, same file format.'
+      'Drone hover network. Bright units vary; most are practically constant.',
+      'Idle units are freed: their constant output moves into the next bias. Same function.',
+      'A circuit is written into the freed units (violet). Same layer sizes.'
     ];
     let stage = 0, touched = false, stageT = 0;
     const seg = segmented('hero-seg', k => { touched = true; setStage(Number(k)); });
@@ -261,28 +261,28 @@
       pass: { xr: [-3, 3], yr: [-3, 3], p: { label: 'Bias <i>B</i>', min: 0, max: 4, step: 0.1, value: 1, fmt: v => v.toFixed(1) },
         exact: x => x, approx: (x, q) => elu(x + q) - q,
         eq: 'y = elu(x + B) − B   ≈ x   for x > −B',
-        src: 'A bias keeps the unit on its straight side, so it hands a value to the next layer unchanged. The H1 circuit uses B = 1 for its registers and pass-throughs. Lower B and the left end bends.' },
+        src: 'Carries a value to the next layer unchanged.' },
       abs: { xr: [-2, 2], yr: [-0.6, 2.2], p: { label: 'Sharpness <i>S</i>', min: 1, max: 60, step: 1, value: 6, fmt: v => v.toFixed(0) },
         exact: x => Math.abs(x), approx: (x, q) => (elu(q * x) + elu(-q * x)) / q,
         eq: '|x| ≈ ( elu(S x) + elu(−S x) ) / S',
-        src: 'Two sharp units; the error is about −1/S. The H1 gate reads |sin| + |cos| of the gait clock and |ω_z command| this way with S = 2000.' },
+        src: 'Two sharp units; error about 1/S.' },
       clamp: { xr: [-3, 3], yr: [-1.8, 1.8], p: { label: 'Sharpness <i>S</i>', min: 2, max: 60, step: 1, value: 8, fmt: v => v.toFixed(0) },
         exact: x => clamp(x, -1, 1), approx: (x, q) => (elu(q * (x + 1)) - elu(q * (x - 1))) / q - 1,
         eq: 'clamp(x, ±L) ≈ ( elu(S (x + L)) − elu(S (x − L)) ) / S − L          (here L = 1)',
-        src: 'Bounds the integrators: in H1 the heading error stays within ±0.35 rad and its integral within ±0.30 rad·s (S = 200). Multiply L by a gate and the same clamp resets the register to zero.' },
+        src: 'Bounds an integrator; a gated L also resets it.' },
       sq: { xr: [-2, 2], yr: [-0.4, 4.2], p: { label: 'Input scale <i>s</i>', min: 0.5, max: 10, step: 0.1, value: 2, fmt: v => v.toFixed(1) },
         exact: x => x * x, approx: (x, q) => 2 * q * q * (elu(x / q) + elu(-x / q)),
         eq: 'x² ≈ 2 s² ( elu(x / s) + elu(−x / s) )',
-        src: 'elu(u) + elu(−u) ≈ u²/2 only for small u: a larger scale s shrinks the input and the error, at the cost of float32 precision. H1 uses s = 10.' },
+        src: 'Accurate for small inputs; a larger s shrinks the error.' },
       prod: { xr: [-2, 2], yr: [-2, 2], p: { label: 'Input scale <i>s</i>', min: 0.5, max: 10, step: 0.1, value: 2, fmt: v => v.toFixed(1) },
         exact: x => 0.8 * x,
         approx: (x, q) => { const sq = u => 2 * q * q * (elu(u / q) + elu(-u / q)); return (sq(x + 0.8) - sq(x - 0.8)) / 4; },
         eq: 'a · b = ( (a + b)² − (a − b)² ) / 4   →   four square units          (plotted: a · 0.8)',
-        src: 'The H1 yaw-rate estimate needs ω_y g_y and ω_z g_z, products of a gyro and a gravity component: four units each, two layers deep.' },
+        src: 'Four units, two layers deep.' },
       gate: { xr: [-1, 2], yr: [-0.4, 1.4], p: { label: 'Sharpness <i>S</i>', min: 2, max: 200, step: 1, value: 20, fmt: v => v.toFixed(0) },
         exact: x => clamp(x, 0, 1), approx: (x, q) => (elu(q * x) - elu(q * (x - 1))) / q,
         eq: 'act = ( elu(S z) − elu(S (z − 1)) ) / S,     z = 6 (|sin φ| + |cos φ|) − 4.5 − 120 |ω_z,cmd|',
-        src: 'A switch: 1 when the gait clock runs and the turn stick is at zero, 0 otherwise. In H1 it decides when the heading hold is active (S = 200).' }
+        src: 'A switch between 0 and 1.' }
     };
     let key = 'pass', sl = null;
     const ctl = $('kit-ctl');
@@ -537,19 +537,19 @@
     ];
     const M = {
       leg: { v: [null, null, 38.2, 7.0, 0.0], unit: ' %', d: 1, max: 45, goal: 'lower is better',
-        src: 'Share of time any part of the broken leg touches the floor. 11 commands × 10 held-out seeds × 20 s, MuJoCo.' },
+        src: 'Share of time the broken leg touches the floor.' },
       lat: { v: [1.0, 1.5, 26.0, 9.6, 3.3], unit: ' cm/s', d: 1, max: 30, goal: 'lower is better',
-        src: 'Mean absolute sideways drift during the four forward commands (0.2–0.5 m/s).' },
+        src: 'Sideways drift, forward commands.' },
       head: { v: [3, 4, 48, 37, 9], unit: '°', d: 0, max: 55, goal: 'lower is better',
-        src: 'Mean absolute heading change in 20 s during the forward commands. The edit has no free action channel for a heading integrator.' },
+        src: 'Heading change in 20 s (v1; v2 brings it to 14°).' },
       tilt: { v: [0.5, 0.8, 19.8, 15.1, 3.1], unit: '°', d: 1, max: 24, goal: 'lower is better',
-        src: 'Mean body tilt over all commands.' },
+        src: 'Mean body tilt.' },
       spd: { v: [0.99, 1.04, 0.93, 0.63, 0.89], unit: '', d: 2, max: 1.2, goal: 'closer to 1 is better', ref: 1,
-        src: 'Measured forward speed divided by the command, forward commands 0.2–0.5 m/s. The edited network walks at about 0.2 m/s whatever the command; the original reaches 0.93 on three legs while dragging the broken leg.' },
+        src: 'The original keeps its speed by dragging the broken leg.' },
       turn: { v: [0.98, 0.98, 0.50, 0.38, 0.90], unit: '', d: 2, max: 1.2, goal: 'closer to 1 is better', ref: 1,
-        src: 'Measured turn rate divided by the command, turn and spin commands.' },
+        src: 'Turn rate over command.' },
       rec: { v: [null, null, 0, 20, 100], unit: ' %', d: 0, max: 110, goal: 'higher is better',
-        src: 'The leg locks 3 s into walking: share of runs that end up walking on three legs (10 seeds × 5 commands). Edited: 10 / 50, all with the leg locking early in its swing.' }
+        src: 'Leg locks while walking: runs that recover.' }
     };
     let key = 'leg';
     const f = fig('solo-cv', {
@@ -583,7 +583,7 @@
         });
         g.text('four legs', (xOf(0) + xOf(1)) / 2, L.t + H + 48, { size: 11, align: 'center', col: C.faint });
         g.text('front-left leg locked', xOf(3), L.t + H + 48, { size: 11, align: 'center', col: C.faint });
-        $('solo-src').innerHTML = '<b>Measured.</b> ' + m.src;
+        $('solo-src').innerHTML = '<b>Measured</b>, held-out seeds. ' + m.src;
       }
     });
     if (!f) return;
@@ -605,19 +605,19 @@
         lines: d => POL.map(p => ({ col: p.col, y: d[p.key].yaw, lw: 2 })).concat(
           POL.slice(1).map(p => ({ col: C.text, y: d[p.key].a25.map(v => -v / S1 * 180 / Math.PI), lw: 1.1, dash: [4, 4], alpha: 0.7 }))),
         leg: [['original', C.orig], ['heading hold', C.hold], ['heading + lateral', C.edit], ['heading the network estimates (−θ, its register)', C.text, true]],
-        src: 'True torso heading, and the heading each edited network keeps in its own register. The original leaves the window within a few seconds (−44° at 26 s).' },
+        src: 'Dashed: the heading each edit keeps in its register.' },
       lat: { yr: [-60, 30], yt: [-60, -40, -20, 0, 20], yl: 'lateral displacement [cm]',
         lines: d => POL.map(p => ({ col: p.col, y: d[p.key].lat.map(v => v * 100), lw: 2 })).concat(
           [{ col: C.text, y: d['rotta + laterale'].a21.map(v => v / S3 * 100), lw: 1.1, dash: [4, 4], alpha: 0.7 }]),
         leg: [['original', C.orig], ['heading hold', C.hold], ['heading + lateral', C.edit], ['displacement the network estimates (p, its register)', C.text, true]],
-        src: 'Sideways distance from the starting line. Heading hold alone stops the turning but not the sideways drift; the lateral hold integrates a velocity readout and walks back after the push. The original ends 7.4 m away.' },
+        src: 'Only the lateral hold walks back after the push.' },
       corr: { yr: [-0.25, 0.2], yt: [-0.2, -0.1, 0, 0.1, 0.2], yl: 'command added inside the network', yf: v => fmt(v, 1),
         lines: d => [
           { col: C.hold, y: d['rotta'].a25.map((v, i) => KTH * v / S1 + KI * d['rotta'].a26[i] / S2), lw: 1.8 },
           { col: C.edit, y: d['rotta + laterale'].a25.map((v, i) => KTH * v / S1 + KI * d['rotta + laterale'].a26[i] / S2), lw: 1.8 },
           { col: C.circuit, y: d['rotta + laterale'].a21.map(v => -KP * v / S3), lw: 1.8 }],
         leg: [['ω_z correction 3θ + 3I, heading hold [rad/s]', C.hold], ['ω_z correction, heading + lateral [rad/s]', C.edit], ['v_y correction −2p, lateral hold [m/s]', C.circuit]],
-        src: 'What the circuits add to the turn and sideways commands the original network reads. It oscillates with the gait and answers each push; the original network never sees anything else.' }
+        src: 'What the circuits add to the commands the original network reads.' }
     };
     const f = fig('push-cv', {
       ratio: 0.36, ratioNarrow: 0.85, minH: 260, maxH: 420,
@@ -637,7 +637,7 @@
     function setView(k) {
       view = k; const v = V[k];
       $('push-leg').innerHTML = v.leg.map(([n, c, d]) => '<span><i style="background:' + (d ? 'none;border-top:2px dashed ' + c : c) + '"></i>' + n + '</span>').join('');
-      $('push-src').innerHTML = '<b>Measured</b> in the Python MuJoCo replica of the controller, standing height 0.98 m, 0.8 m/s forward. ' + v.src;
+      $('push-src').innerHTML = '<b>Measured</b>, 0.98 m, 0.8 m/s, yaw kick at 9 s and push at 17 s. ' + v.src;
       if (f) f.redraw();
     }
     segmented('push-seg', setView); setView('yaw');
@@ -758,8 +758,8 @@
           g.dot(X(0), Y(0), 3.5, C.text);
           c.restore();
         });
-        $('goal-src').innerHTML = '<b>Measured.</b> Front-left leg locked, top view, 1 m grid; start at the white dot, goal = circle of 0.3 m. Paths of 5 seeds per panel (dot = reached, × = time ran out, lines leaving the frame kept walking off); the count is over 10 held-out seeds. ' +
-          (mode === 'A' ? 'Network only: the command is fixed at 0.3 m/s towards the goal at the start and never changes.' : 'Joystick: the commanded turn rate follows the bearing error to the goal, at most 0.5 rad/s.');
+        $('goal-src').innerHTML = '<b>Measured</b>, leg locked, 1 m grid. Dot = reached, × = timed out; count over 10 seeds. ' +
+          (mode === 'A' ? 'Fixed command towards the goal.' : 'Turn rate follows the bearing to the goal.');
       }
     });
     segmented('goal-mode', k => { mode = k; f.redraw(); });
