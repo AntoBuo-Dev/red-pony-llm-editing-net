@@ -31,6 +31,9 @@ come from simulation, where every trial can be repeated and measured.
 
 ## The editing loop
 
+The formal statement (operators O1–O8, procedure P1–P6, invariants, what each step guarantees) is in
+[`METHOD.md`](METHOD.md). In short:
+
 1. **Read** the weights and the normaliser before running anything.
 2. **Probe** the network on controlled states: sweep one variable, freeze the rest.
 3. **Make room**: measure unit usage, fold idle units into the next bias.

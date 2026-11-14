@@ -203,10 +203,18 @@ v<sub>y</sub> seen by the network = v<sub>y,cmd</sub> − 2p</pre>
       <figcaption>Crouched at 0.74 m, 0.6 m/s. Same three networks, same command.</figcaption>
     </figure>
   </div>
-  <figure>
-    <img src="assets/h1/standing_0.98m_0.8ms_pushes_summary.jpg" alt="Time series of heading, lateral displacement, internal correction and wrist joints for the three networks, with a yaw kick at 9 s and a lateral push at 17 s" loading="lazy">
-    <figcaption>Yaw kick at 9 s, lateral push at 17 s. Rows: true heading against the heading estimated by the network (its register), lateral displacement, the internal correction fed to the original network, and the wrist joints used as memory registers. Labels in Italian, from the original analysis.</figcaption>
-  </figure>
+  <div class="board">
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Signal" id="push-seg">
+        <button type="button" data-k="yaw" aria-pressed="true">Heading</button>
+        <button type="button" data-k="lat" aria-pressed="false">Lateral displacement</button>
+        <button type="button" data-k="corr" aria-pressed="false">Correction fed to the network</button>
+      </div>
+    </div>
+    <canvas id="push-cv" aria-label="Time series of heading, lateral displacement and internal correction for the three H1_2 networks, with a yaw kick at 9 s and a lateral push at 17 s"></canvas>
+    <div class="legend" id="push-leg"></div>
+    <p class="src" id="push-src"></p>
+  </div>
   <div class="lesson">
     <p class="l-seen"><b>Seen</b>No hidden unit was unused, but some were redundant: folding them away cost an action error of 0.005 rms.</p>
     <p class="l-got"><b>Understood</b>The best place to inject a correction is an input the network already understands (here the turn command), not the joints.</p>
@@ -344,10 +352,10 @@ v<sub>y</sub> seen by the network = v<sub>y,cmd</sub> − 2p</pre>
   </div>
 
   <div class="two flip">
-    <figure>
-      <img src="assets/solo/gait_diagrams.jpg" alt="Foot contact diagrams: original on four legs, original with the front-left leg locked, edited with the leg locked" loading="lazy">
-      <figcaption>Foot contacts over 2 s at 0.3 m/s (filled = on the ground). In the trot the front-left and hind-right feet share a stance; with the front-left gone, the original stands on the hind-right foot alone and the folded leg (red) hits the floor every cycle. The edited gait gives the front-right leg two short swings per cycle and never touches the floor with the broken leg here.</figcaption>
-    </figure>
+    <div class="board">
+      <canvas id="gait-cv" aria-label="Foot contact diagrams over two seconds: original on four legs, original with the front-left leg locked, edited with the leg locked"></canvas>
+      <p class="src"><b>Measured.</b> Foot contacts over 2 s at 0.3 m/s (bar = foot on the ground). In the trot the front-left and hind-right feet share a stance; with the front-left gone, the original stands on the hind-right foot alone and the folded leg (red) hits the floor every cycle. The edited gait gives the front-right leg two short swings per cycle.</p>
+    </div>
     <div class="prose">
       <h3>Why the original limps</h3>
       <p>Contacts binned by gait phase showed the problem precisely. In a trot the front-left and hind-right feet carry the robot together. Without the front-left leg, for half of every cycle the robot stands on the hind-right foot alone, 26 cm from its centre of mass, and tips onto the broken corner. The network then uses the folded leg as a skid.</p>
@@ -422,10 +430,17 @@ a = net(obs') + <span class="c">F</span>·A + <span class="c">G</span>·D<sub>FR
       <video src="assets/solo/edited_vs_rl_reference.mp4" poster="assets/solo/edited_vs_rl_reference.jpg" controls muted playsinline loop preload="none"></video>
       <figcaption>Edited network (left) against the network fine-tuned with RL on three legs (right): the trained reference is faster, straighter and more level.</figcaption>
     </figure>
-    <figure>
-      <img src="assets/solo/friction_sweep.jpg" alt="Forward speed and broken-leg contact as a function of floor friction for the three networks" loading="lazy">
-      <figcaption>Floor friction sweep at 0.3 m/s. The edited gait works between 0.8 and 1.0. At 0.5–0.6 it walks backwards (a second, reversed gait mode), at 0.7 it stays in place, at 1.1 and above it falls onto the broken leg. On four legs it walks normally at every friction.</figcaption>
-    </figure>
+  </div>
+
+  <div class="board">
+    <canvas id="fric-cv" aria-label="Forward speed and broken-leg contact against floor friction for the original, edited and RL reference networks"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--orig)"></i>original, 3 legs</span>
+      <span><i style="background:var(--edit)"></i>edited, 3 legs</span>
+      <span><i style="background:var(--edit);opacity:.45"></i>edited, 4 legs</span>
+      <span><i style="background:var(--unit)"></i>RL reference, 3 legs</span>
+    </div>
+    <p class="src"><b>Measured.</b> Command 0.3 m/s, fixed friction, 5 seeds × 20 s per point, no falls anywhere. The edited gait works between 0.8 and 1.0. At 0.5–0.6 it walks backwards (a second, reversed gait mode), at 0.7 it stays in place, at 1.1 and above it leans on the broken leg about half of the time. On four legs it walks normally at every friction.</p>
   </div>
 
   <div class="lesson">
@@ -438,19 +453,98 @@ a = net(obs') + <span class="c">F</span>·A + <span class="c">G</span>·D<sub>FR
 
 <!-- ============================================================ METHOD -->
 <section class="step" id="method" aria-labelledby="t-method">
-  <p class="eyebrow"><i style="background:var(--circuit)"></i>Method</p>
-  <h2 id="t-method">The editing loop, as the LLM runs it.</h2>
+  <p class="eyebrow"><i style="background:var(--circuit)"></i>Method, formally</p>
+  <h2 id="t-method">Eight operators, six steps, four invariants.</h2>
+  <div class="two">
+    <div class="prose">
+      <p>Every edit on this page is a composition of a small set of operations on the weights of an ELU MLP. Each operation changes the weights in closed form and states what it preserves; what it does not guarantee is measured. Writing the method this way makes an edit checkable: you can read <code>weight_edit.json</code> and know, for every changed unit, which operator wrote it and whether its numbers were exact, solved, fitted or searched by hand.</p>
+    </div>
+    <pre class="code"><span class="cm"># the network (ELU MLP, L hidden layers)</span>
+p₁     = W₀ x̂ + b₀          h₁ = σ(p₁)
+p<sub>ℓ+1</sub>   = W<sub>ℓ</sub> h<sub>ℓ</sub> + b<sub>ℓ</sub>        h<sub>ℓ+1</sub> = σ(p<sub>ℓ+1</sub>)
+a      = W<sub>L</sub> h<sub>L</sub> + b<sub>L</sub>
+σ(u)   = u  (u &gt; 0),   eᵘ − 1  (u ≤ 0)
+
+<span class="cm"># p = "before the fold", h = "after the fold"</span>
+<span class="cm"># 𝒟 = recorded observations (held-out for checks)</span></pre>
+  </div>
+
+  <div class="inv">
+    <div><b>I1</b><span>Same shape: every W′, b′ has the shape of W, b. The deploy code does not change.</span></div>
+    <div><b>I2</b><span>No gradient on the result. Parameters are exact, solved, fitted or hand-searched, and declared as such.</span></div>
+    <div><b>I3</b><span>Reproducible: a deterministic builder, original in, edited out, sha256 of both recorded.</span></div>
+    <div><b>I4</b><span>The original file is untouched and is the baseline of every test.</span></div>
+  </div>
+
+  <h3>The operators</h3>
+  <div class="ops">
+    <div class="op"><span class="n">O1</span><h4>Fold a redundant unit</h4>
+      <pre>h_j ≈ c_j + Σ α_k h_k   (ridge, 𝒟)
+W_ℓ[:,k] += W_ℓ[:,j] α_k
+b_ℓ      += W_ℓ[:,j] c_j
+unit j cleared → free</pre>
+      <p><b>Keeps</b> the next pre-activation up to <code>W_ℓ[:,j] r_j</code>; the fold's action error is measured.</p></div>
+    <div class="op"><span class="n">O2</span><h4>Retire an idle unit</h4>
+      <pre>u_j = std(h_j) · ‖W_ℓ[:,j]‖
+if u_j &lt; 10⁻³:
+  b_ℓ += W_ℓ[:,j] · E[h_j]
+  unit j cleared → free</pre>
+      <p><b>Keeps</b> the next pre-activation up to std <code>u_j</code>. O1 with α = 0.</p></div>
+    <div class="op"><span class="n">O3</span><h4>Re-coordinatise the inputs</h4>
+      <pre>original sees  x̃ = T x + t
+W₀′ = W₀ T
+b₀′ = b₀ + W₀ t</pre>
+      <p><b>Exact.</b> Trims, rate loops, disconnecting an input, reading a register as a command. On a subset of rows: those units only.</p></div>
+    <div class="op"><span class="n">O4</span><h4>Gated input shift</h4>
+      <pre>x̃ = x + s · g(x),  g = wᵀx + w₀
+W₀′ = W₀ + (W₀ s) wᵀ
+b₀′ = b₀ + (W₀ s) w₀</pre>
+      <p><b>Exact</b> where g = 1. The gate must be linear in x (a first layer cannot multiply); it leaks as <code>(W₀ s)·g</code> where g ≠ 0.</p></div>
+    <div class="op"><span class="n">O5</span><h4>Circuit primitives</h4>
+      <pre>pass   σ(x+B) − B
+|x|    (σ(Sx) + σ(−Sx)) / S
+clamp  (σ(S(x+L)) − σ(S(x−L)))/S − L
+x²     2s² (σ(x/s) + σ(−x/s))
+gate   (σ(Sz) − σ(S(z−1))) / S
+bump   σ(β(cos(ψ−ψᵢ) − cos α))</pre>
+      <p><b>Error</b> ≤ 1/S, or ≈ |x|³/3s for x². One layer of depth per stage: depth bounds what can be chained.</p></div>
+    <div class="op"><span class="n">O6</span><h4>Shift before the fold</h4>
+      <pre>p(x₀(ψ)) + Δ(ψ) = p(x*)   ∀ψ
+Δ(ψ) = Cᵀ φ(ψ)     (N bumps)
+Φ C = D            (N × N, no fit)</pre>
+      <p><b>Exact</b> at the nodes, interpolated between. Restores values <em>and</em> slopes σ′(p): the gains come back.</p></div>
+    <div class="op"><span class="n">O7</span><h4>Registers in the actions</h4>
+      <pre>a_t[R]  = κ · F(z_{t−1}, x_t)
+z_{t−1} = a_{t−1}[R] / κ
+b₀ += W₀[:,R] m_R,  W₀[:,R] = 0</pre>
+      <p><b>Gives memory</b> to a network without state. The actuators on R follow the register unless they are idle (a broken leg).</p></div>
+    <div class="op"><span class="n">O8</span><h4>Gated output injection</h4>
+      <pre>a′ = f(x) + Σ G_k(x) · d_k(x)</pre>
+      <p><b>Exact on values, not on gains.</b> Safe only if the original units already sit at the right operating point; otherwise O3, O4 or O6 first.</p></div>
+  </div>
+
+  <div class="table">
+    <table class="opmap">
+      <thead><tr><th>Where each operator was used</th><th>O1</th><th>O2</th><th>O3</th><th>O4</th><th>O5</th><th>O6</th><th>O7</th><th>O8</th></tr></thead>
+      <tbody>
+        <tr><td>H1_2 heading hold</td><td>20/9/5 units</td><td>·</td><td>ω<sub>z</sub> ← registers</td><td>·</td><td>rate, gate, clamps</td><td>·</td><td>wrists 25, 26</td><td>·</td></tr>
+        <tr><td>Quadrotor yaw</td><td>·</td><td>28 + 5</td><td>freeze 277, yaw error</td><td>·</td><td>23 bumps, yaw cmd</td><td>215 units, 23×23</td><td>·</td><td>residuals, limiter</td></tr>
+        <tr><td>SOLO-12 three legs</td><td>46/6/5 units</td><td>·</td><td>yaw-rate loop</td><td>posture, trims</td><td>flag, gate, 40 bumps</td><td>·</td><td>v2, running: dead leg</td><td>F·A, G·D<sub>FR</sub></td></tr>
+      </tbody>
+      <caption>The drone's failed "add the missing thrust at the output" was an O8 where an O6 was needed. In SOLO the O8 works because O4 has already moved the original units back to their four-leg operating point; without O4 the robot leans on the broken leg 74 % of the time.</caption>
+    </table>
+  </div>
+
+  <h3>The procedure</h3>
   <div class="loop">
-    <div class="card"><span class="n">01</span><h4>Read</h4><p>Load the weights and the normaliser. Column norms, means, which inputs the network barely reads. Cheapest test, often the most telling.</p></div>
-    <div class="card"><span class="n">02</span><h4>Probe</h4><p>Run the network on controlled states: sweep one variable, freeze the rest. Find what it really does, not what the reward asked for.</p></div>
-    <div class="card"><span class="n">03</span><h4>Make room</h4><p>Measure unit usage over many states. Fold idle or redundant units into the next bias or into their neighbours by least squares.</p></div>
-    <div class="card"><span class="n">04</span><h4>Write</h4><p>Build the missing behaviour from ELU units: sensors, integrators, clamps, gates. Inject it where the network already listens, before the fold.</p></div>
-    <div class="card"><span class="n">05</span><h4>Test</h4><p>Fast simulator first, then the full one. Fixed protocol, the original as a baseline, delay and disturbances on.</p></div>
-    <div class="card"><span class="n">06</span><h4>Look at failures</h4><p>Diagnose before editing again: gains, operating points, logs. Check that the defect is real. Bound every correction.</p></div>
+    <div class="card"><span class="n">P1</span><h4>Read</h4><p>Column norms, normaliser means, the inputs the network barely reads. No simulation yet.</p></div>
+    <div class="card"><span class="n">P2</span><h4>Probe</h4><p>Sweep one variable, freeze the rest; equilibria and Jacobians at the operating points. Is it the value, the operating point or the gain that is wrong?</p></div>
+    <div class="card"><span class="n">P3</span><h4>Make room</h4><p>Usage census; O2 for idle units, O1 for redundant ones; report the fold error.</p></div>
+    <div class="card"><span class="n">P4</span><h4>Prototype</h4><p>Wrap the unchanged network with the intended input and output changes and test it in simulation before compiling anything.</p></div>
+    <div class="card"><span class="n">P5</span><h4>Compile</h4><p>Write the design with O3–O8. Checks: same shapes, ONNX against numpy, compiled against prototype.</p></div>
+    <div class="card"><span class="n">P6</span><h4>Validate</h4><p>Fixed protocol, the original as baseline, the nominal condition too, ablations, seeds never used during design.</p></div>
   </div>
-  <div class="prose">
-    <p>Every edit ends as a builder script that takes the original file and produces the edited one, plus a <code>weight_edit.json</code> with the freed units, the parameters and the sha256 of both files. The edited network is a normal ONNX MLP: the deploy code does not change.</p>
-  </div>
+  <p class="src">Full statement, with the guarantees and the per-example tables: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/blob/main/METHOD.md">METHOD.md</a>.</p>
 </section>
 
 <!-- ============================================================ LIMITS -->

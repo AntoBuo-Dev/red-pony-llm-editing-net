@@ -590,6 +590,131 @@
     segmented('solo-seg', k => { key = k; f.redraw(); });
   })();
 
+  // ================================================================= 8. H1 pushes: time series (measured, Python replica)
+  (function pushes() {
+    const cv = $('push-cv'); if (!cv) return;
+    const S1 = 2, S2 = 2, S3 = 4, KTH = 3, KI = 3, KP = 2;
+    const POL = [
+      { key: 'originale', name: 'original', col: C.orig },
+      { key: 'rotta', name: 'heading hold', col: C.hold },
+      { key: 'rotta + laterale', name: 'heading + lateral hold', col: C.edit }
+    ];
+    let data = null, view = 'yaw';
+    const V = {
+      yaw: { yr: [-12, 12], yt: [-10, -5, 0, 5, 10], yl: 'heading [°]',
+        lines: d => POL.map(p => ({ col: p.col, y: d[p.key].yaw, lw: 2 })).concat(
+          POL.slice(1).map(p => ({ col: C.text, y: d[p.key].a25.map(v => -v / S1 * 180 / Math.PI), lw: 1.1, dash: [4, 4], alpha: 0.7 }))),
+        leg: [['original', C.orig], ['heading hold', C.hold], ['heading + lateral', C.edit], ['heading the network estimates (−θ, its register)', C.text, true]],
+        src: 'True torso heading, and the heading each edited network keeps in its own register. The original leaves the window within a few seconds (−44° at 26 s).' },
+      lat: { yr: [-60, 30], yt: [-60, -40, -20, 0, 20], yl: 'lateral displacement [cm]',
+        lines: d => POL.map(p => ({ col: p.col, y: d[p.key].lat.map(v => v * 100), lw: 2 })).concat(
+          [{ col: C.text, y: d['rotta + laterale'].a21.map(v => v / S3 * 100), lw: 1.1, dash: [4, 4], alpha: 0.7 }]),
+        leg: [['original', C.orig], ['heading hold', C.hold], ['heading + lateral', C.edit], ['displacement the network estimates (p, its register)', C.text, true]],
+        src: 'Sideways distance from the starting line. Heading hold alone stops the turning but not the sideways drift; the lateral hold integrates a velocity readout and walks back after the push. The original ends 7.4 m away.' },
+      corr: { yr: [-0.25, 0.2], yt: [-0.2, -0.1, 0, 0.1, 0.2], yl: 'command added inside the network', yf: v => fmt(v, 1),
+        lines: d => [
+          { col: C.hold, y: d['rotta'].a25.map((v, i) => KTH * v / S1 + KI * d['rotta'].a26[i] / S2), lw: 1.8 },
+          { col: C.edit, y: d['rotta + laterale'].a25.map((v, i) => KTH * v / S1 + KI * d['rotta + laterale'].a26[i] / S2), lw: 1.8 },
+          { col: C.circuit, y: d['rotta + laterale'].a21.map(v => -KP * v / S3), lw: 1.8 }],
+        leg: [['ω_z correction 3θ + 3I, heading hold [rad/s]', C.hold], ['ω_z correction, heading + lateral [rad/s]', C.edit], ['v_y correction −2p, lateral hold [m/s]', C.circuit]],
+        src: 'What the circuits add to the turn and sideways commands the original network reads. It oscillates with the gait and answers each push; the original network never sees anything else.' }
+    };
+    const f = fig('push-cv', {
+      ratio: 0.36, ratioNarrow: 0.85, minH: 260, maxH: 420,
+      draw(g) {
+        if (!data) { g.text('loading…', g.w / 2, g.h / 2, { align: 'center' }); return; }
+        const v = V[view], t = data.t;
+        const m = { l: 48, r: 14, t: 26, b: 36 };
+        const ax = g.axes({ x: m.l, y: m.t, w: g.w - m.l - m.r, h: g.h - m.t - m.b, xr: [-2, 26], yr: v.yr, xt: [0, 5, 10, 15, 20, 25], yt: v.yt, yf: v.yf, xl: 'time from the walking command [s]', yl: v.yl });
+        ax.clip(() => g.line(m.l, ax.Y(0), g.w - m.r, ax.Y(0), C.line, 1));
+        [[0, 'walk 0.8 m/s'], [9, 'yaw kick'], [17, 'lateral push']].forEach(([x, lab]) => {
+          g.line(ax.X(x), m.t, ax.X(x), g.h - m.b, x ? C.circuit : C.faint, 1, [3, 4]);
+          g.text(lab, ax.X(x) + 4, m.t + 11, { size: 11, col: x ? C.circuit : C.muted });
+        });
+        v.lines(data.s).forEach(L => ax.clip(() => g.poly(L.y.map((y, i) => [ax.X(t[i]), ax.Y(y)]), L.col, L.lw, L.dash, L.alpha)));
+      }
+    });
+    function setView(k) {
+      view = k; const v = V[k];
+      $('push-leg').innerHTML = v.leg.map(([n, c, d]) => '<span><i style="background:' + (d ? 'none;border-top:2px dashed ' + c : c) + '"></i>' + n + '</span>').join('');
+      $('push-src').innerHTML = '<b>Measured</b> in the Python MuJoCo replica of the controller, standing height 0.98 m, 0.8 m/s forward. ' + v.src;
+      if (f) f.redraw();
+    }
+    segmented('push-seg', setView); setView('yaw');
+    fetch('assets/data/h1_pushes.json').then(r => r.json()).then(d => { data = { t: d.series['rotta'].t, s: d.series }; f.redraw(); }).catch(() => { cv.closest('.board').hidden = true; });
+  })();
+
+  // ================================================================= 9. SOLO friction sweep (measured)
+  (function friction() {
+    const fr = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.25];
+    const S = [
+      { col: C.orig, vx: [0.316, 0.308, 0.314, 0.294, 0.278, 0.271, 0.268, 0.276], leg: [30.6, 29.4, 30.1, 31.1, 32.0, 34.3, 34.9, 36.0] },
+      { col: C.edit, vx: [-0.198, -0.195, 0.006, 0.233, 0.241, 0.224, 0.124, 0.108], leg: [0, 0, 0, 0, 0, 5.4, 52.8, 57.0] },
+      { col: C.edit, alpha: 0.45, dash: [5, 4], vx: [0.311, 0.31, 0.311, 0.31, 0.308, 0.305, 0.301, 0.293], leg: null },
+      { col: C.unit, vx: [0.264, 0.264, 0.263, 0.262, 0.262, 0.264, 0.264, 0.257], leg: [0, 0, 0, 0, 0, 0, 0, 0] }
+    ];
+    fig('fric-cv', {
+      ratio: 0.34, ratioNarrow: 1.25, minH: 280, maxH: 420,
+      draw(g) {
+        const narrow = g.narrow;
+        const pA = narrow ? { x: 48, y: 26, w: g.w - 62, h: g.h / 2 - 66 } : { x: 48, y: 26, w: g.w / 2 - 74, h: g.h - 64 };
+        const pB = narrow ? { x: 48, y: g.h / 2 + 22, w: g.w - 62, h: g.h / 2 - 62 } : { x: g.w / 2 + 40, y: 26, w: g.w / 2 - 54, h: g.h - 64 };
+        const A = g.axes(Object.assign({}, pA, { xr: [0.45, 1.3], yr: [-0.25, 0.4], xt: [0.5, 0.7, 0.9, 1.1, 1.3], yt: [-0.2, 0, 0.2, 0.4], xf: v => fmt(v, 1), yf: v => fmt(v, 1), xl: 'floor friction', yl: 'forward speed [m/s]' }));
+        const B = g.axes(Object.assign({}, pB, { xr: [0.45, 1.3], yr: [0, 65], xt: [0.5, 0.7, 0.9, 1.1, 1.3], yt: [0, 20, 40, 60], xf: v => fmt(v, 1), xl: 'floor friction', yl: 'broken leg on the floor [%]' }));
+        A.clip(() => { g.line(pA.x, A.Y(0), pA.x + pA.w, A.Y(0), C.line, 1); g.line(pA.x, A.Y(0.3), pA.x + pA.w, A.Y(0.3), C.faint, 1, [4, 4]); });
+        g.text('command', pA.x + pA.w - 2, A.Y(0.3) - 5, { size: 11, align: 'right' });
+        A.clip(() => { g.c.fillStyle = 'rgba(106,214,173,0.08)'; g.c.fillRect(A.X(0.75), pA.y, A.X(1.05) - A.X(0.75), pA.h); });
+        g.text('edit works', A.X(0.9), pA.y + 12, { size: 11, align: 'center', col: C.edit });
+        S.forEach(s => {
+          const pts = fr.map((x, i) => [A.X(x), A.Y(s.vx[i])]);
+          A.clip(() => g.poly(pts, s.col, 2.2, s.dash, s.alpha));
+          pts.forEach(p => g.dot(p[0], p[1], 3, s.col, null, 0, s.alpha));
+          if (s.leg) { const q = fr.map((x, i) => [B.X(x), B.Y(s.leg[i])]); B.clip(() => g.poly(q, s.col, 2.2, s.dash, s.alpha)); q.forEach(p => g.dot(p[0], p[1], 3, s.col)); }
+        });
+        g.text('walks backwards', A.X(0.55), A.Y(-0.2) - 10, { size: 11, align: 'center', col: C.edit });
+      }
+    });
+  })();
+
+  // ================================================================= 10. SOLO gait diagram (measured, loaded from JSON)
+  (function gait() {
+    const cv = $('gait-cv'); if (!cv) return;
+    let data = null;
+    const f = fig('gait-cv', {
+      ratio: 0.5, ratioNarrow: 1.1, minH: 300, maxH: 520,
+      draw(g) {
+        if (!data) { g.text('loading…', g.w / 2, g.h / 2, { align: 'center' }); return; }
+        const rows = ['FL', 'FR', 'HL', 'HR', 'broken'];
+        const panels = data.panels, n = panels.length;
+        const m = { l: g.narrow ? 58 : 84, r: 10, t: 8, b: 30 };
+        const ph = (g.h - m.t - m.b) / n, x0 = m.l, w = g.w - m.l - m.r;
+        const t0 = data.t[0], t1 = data.t[data.t.length - 1];
+        const X = t => x0 + (t - t0) / (t1 - t0) * w;
+        panels.forEach((P, k) => {
+          const y0 = m.t + k * ph + 18, rh = (ph - 26) / rows.length;
+          g.text(P.title, x0, y0 - 5, { size: 12, col: P.col === 'orig' ? C.orig : P.col === 'edit' ? C.edit : C.muted });
+          rows.forEach((r, j) => {
+            const y = y0 + j * rh;
+            g.text(r === 'broken' ? (g.narrow ? 'broken' : 'broken leg') : r, x0 - 6, y + rh / 2, { size: 10.5, align: 'right', base: 'middle', col: r === 'broken' ? C.orig : C.muted });
+            g.line(x0, y + rh / 2, x0 + w, y + rh / 2, C.grid, 1);
+            const on = P.contacts[r]; if (!on) return;
+            g.c.fillStyle = r === 'broken' ? C.orig : (P.col === 'edit' ? C.edit : P.col === 'orig' ? C.orig : C.unit);
+            if (r !== 'broken') g.c.globalAlpha = 0.85;
+            let s = -1;
+            for (let i = 0; i <= on.length; i++) {
+              const v = i < on.length ? on[i] : 0;
+              if (v && s < 0) s = i;
+              if (!v && s >= 0) { g.c.fillRect(X(data.t[s]), y + rh * 0.18, X(data.t[Math.min(i, on.length - 1)]) - X(data.t[s]), rh * 0.64); s = -1; }
+            }
+            g.c.globalAlpha = 1;
+          });
+        });
+        [0, 0.5, 1, 1.5, 2].forEach(v => { const tt = t0 + v; if (tt <= t1 + 1e-6) g.text(fmt(v, 1) + ' s', X(tt), g.h - 12, { size: 11, font: 'num', align: 'center' }); });
+      }
+    });
+    fetch('assets/data/solo_gait.json').then(r => { if (!r.ok) throw 0; return r.json(); }).then(d => { data = d; f.redraw(); }).catch(() => { cv.closest('.board').hidden = true; });
+  })();
+
   // ================================================================= tables
   (function tables() {
     const m = DATA.mission, tb = $('yaw-tab');
