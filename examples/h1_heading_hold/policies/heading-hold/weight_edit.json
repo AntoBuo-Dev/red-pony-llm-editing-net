@@ -1,0 +1,97 @@
+{
+  "source_policy": "../2026-09-13_21-27-39",
+  "source_onnx_sha256": "429d21f51c79eb05b0ce888ce9a01f569e1dfd208959f0990b9e69a0140d104b",
+  "onnx_sha256": "f4c39db6a5b8d6c4a3e60212f640fe99ffd4e06cbf67af0ebf25f96d83f0870f",
+  "method": "unit freeing + hand-written heading-hold circuit; no training",
+  "parameters": {
+    "Kth": 3.0,
+    "KI": 3.0,
+    "s1": 2.0,
+    "s2": 2.0,
+    "Lth": 0.35,
+    "LI": 0.3,
+    "dt": 0.02,
+    "m25": 0.027,
+    "m26": 0.067,
+    "S": 200.0,
+    "Sg": 2000.0,
+    "B": 1.0,
+    "alpha": 2.0,
+    "beta": 0.4,
+    "beta2": 0.1,
+    "sn": 10.0,
+    "sx": 5.0,
+    "gq": 0.15
+  },
+  "freed_units": {
+    "layer1": [
+      307,
+      402,
+      413,
+      23,
+      150,
+      395,
+      279,
+      247,
+      265,
+      14,
+      211,
+      315,
+      84,
+      446,
+      151,
+      350,
+      409,
+      212,
+      85,
+      310
+    ],
+    "layer2": [
+      83,
+      15,
+      220,
+      129,
+      185,
+      133,
+      44,
+      200,
+      177
+    ],
+    "layer3": [
+      17,
+      64,
+      119,
+      28,
+      21
+    ]
+  },
+  "register_actions": {
+    "25": "left_wrist_yaw_joint = s1 * heading error [rad]",
+    "26": "right_wrist_yaw_joint = s2 * integral of heading error [rad s]"
+  },
+  "changed_entries": {
+    "mlp.0.weight": 14220,
+    "mlp.0.bias": 512,
+    "mlp.2.weight": 131072,
+    "mlp.2.bias": 256,
+    "mlp.4.weight": 32768,
+    "mlp.4.bias": 128,
+    "mlp.6.weight": 3456,
+    "mlp.6.bias": 27
+  },
+  "freeing_action_error": {
+    "max": 0.14533233642578125,
+    "rms": 0.004659139085561037,
+    "p999": 0.03437471762299538
+  },
+  "checks": {
+    "register_max_err_active": 0.00012969970703125,
+    "register_max_err_inactive": 3.2782554626464844e-07,
+    "yaw_rate_bias_rad_s": 7.058456218509375e-06,
+    "other_actions_max_diff_vs_folded_command": 2.86102294921875e-06,
+    "max_onnx_numpy_error": 2.384185791015625e-06
+  },
+  "samples": 112000,
+  "torchscript_sha256": "7f355ce71a9ad396a63933f63701fab9dfb9f785dfae7a330fe734236c5c9a41",
+  "max_onnx_torchscript_error": 1.9073486328125e-06
+}

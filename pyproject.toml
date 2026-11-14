@@ -1,0 +1,30 @@
+[project]
+name = "red-pony"
+version = "0.1.0"
+description = "Project R.E.D. Pony: editing trained robot policies by hand (and by LLM), without retraining"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { text = "Apache-2.0" }
+dependencies = [
+    "numpy>=2.0",
+    "mujoco>=3.3",
+    "onnx>=1.17",
+    "onnxruntime>=1.20",
+    "pyyaml>=6.0",
+    "matplotlib>=3.9",
+    "imageio>=2.36",
+    "imageio-ffmpeg>=0.5",
+    "torch>=2.7",
+    "tensorboard>=2.18",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true

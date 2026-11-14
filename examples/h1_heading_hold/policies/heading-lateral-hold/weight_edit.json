@@ -1,0 +1,142 @@
+{
+  "source_policy": "../2026-09-13_21-27-39",
+  "source_onnx_sha256": "429d21f51c79eb05b0ce888ce9a01f569e1dfd208959f0990b9e69a0140d104b",
+  "onnx_sha256": "e87eaa9b5f0c7ad913d652692cbc480b6a00ce813c55a6f569d3f996c1f86cb6",
+  "method": "unit freeing + hand-written heading/lateral hold circuit; lateral-velocity readout = ridge regression fitted in the Python MuJoCo replica",
+  "parameters": {
+    "Kth": 3.0,
+    "KI": 3.0,
+    "s1": 2.0,
+    "s2": 2.0,
+    "Lth": 0.35,
+    "LI": 0.3,
+    "dt": 0.02,
+    "m25": 0.027,
+    "m26": 0.067,
+    "Kp": 2.0,
+    "s3": 4.0,
+    "Lp": 0.15,
+    "m21": -0.056,
+    "S": 200.0,
+    "Sg": 2000.0,
+    "B": 1.0,
+    "alpha": 2.0,
+    "beta": 0.4,
+    "beta2": 0.1,
+    "sn": 10.0,
+    "sx": 5.0,
+    "gq": 0.15
+  },
+  "freed_units": {
+    "layer1": [
+      307,
+      402,
+      413,
+      150,
+      23,
+      395,
+      247,
+      279,
+      265,
+      211,
+      315,
+      84,
+      151,
+      446,
+      14,
+      409,
+      350,
+      85,
+      310,
+      212,
+      55,
+      345,
+      288
+    ],
+    "layer2": [
+      83,
+      15,
+      220,
+      185,
+      129,
+      228,
+      44,
+      200,
+      45,
+      80,
+      133,
+      202,
+      7
+    ],
+    "layer3": [
+      17,
+      64,
+      119,
+      28,
+      21,
+      51,
+      48,
+      20
+    ]
+  },
+  "register_actions": {
+    "25": "left_wrist_yaw_joint = s1 * heading error [rad]",
+    "26": "right_wrist_yaw_joint = s2 * integral of heading error [rad s]",
+    "21": "left_wrist_roll_joint = s3 * estimated lateral displacement [m]"
+  },
+  "changed_entries": {
+    "mlp.0.weight": 18030,
+    "mlp.0.bias": 512,
+    "mlp.2.weight": 131072,
+    "mlp.2.bias": 256,
+    "mlp.4.weight": 32768,
+    "mlp.4.bias": 128,
+    "mlp.6.weight": 3456,
+    "mlp.6.bias": 27
+  },
+  "freeing_action_error": {
+    "max": 0.18058449029922485,
+    "rms": 0.006409167777746916,
+    "p999": 0.04427143558859825
+  },
+  "readout_fit_rounds": [
+    {
+      "conditions": 620,
+      "heldout_condition_mean_error_rms_m_s": 0.0026828088657322607,
+      "heldout_condition_mean_error_max_m_s": 0.014438993303381567
+    },
+    {
+      "conditions": 1240,
+      "heldout_condition_mean_error_rms_m_s": 0.003115563846636846,
+      "heldout_condition_mean_error_max_m_s": 0.022520795086561216
+    },
+    {
+      "conditions": 1855,
+      "heldout_condition_mean_error_rms_m_s": 0.0027651429884019123,
+      "heldout_condition_mean_error_max_m_s": 0.02147461125770653
+    },
+    {
+      "conditions": 2505,
+      "heldout_condition_mean_error_rms_m_s": 0.0025497152892389836,
+      "heldout_condition_mean_error_max_m_s": 0.021253351438557475
+    },
+    {
+      "conditions": 3128,
+      "heldout_condition_mean_error_rms_m_s": 0.0024617987354628055,
+      "heldout_condition_mean_error_max_m_s": 0.020503190715153705
+    }
+  ],
+  "readout_bias": 0.24825846739685942,
+  "readout_weight_norm": 2.393993591412406,
+  "checks": {
+    "heading_registers_max_err_active": 0.00013682246208190918,
+    "heading_registers_max_err_inactive": 1.7881393432617188e-07,
+    "lateral_register_max_err_active": 3.8047407685537493e-07,
+    "lateral_register_max_err_inactive": 5.662441253662109e-07,
+    "samples_lateral_active": 11679,
+    "other_actions_max_diff_vs_folded_commands": 2.384185791015625e-06,
+    "max_onnx_numpy_error": 1.430511474609375e-06
+  },
+  "torchscript_sha256": "2e547184bff44d5f31d64c39982d02ff727c681901b51e6783c3ecd07980d3db",
+  "max_onnx_torchscript_error": 1.1920928955078125e-06
+}

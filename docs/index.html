@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Project R.E.D. Pony</title>
+<meta name="description" content="Editing trained robot policies by hand: an LLM reads the weights, finds room inside the network and writes new behaviour into it, without retraining. Unitree H1_2 heading hold, quadrotor yaw tracking, SOLO-12 on three legs.">
+<meta name="theme-color" content="#0d1014">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d1014'/%3E%3Crect x='6' y='11' width='9' height='9' rx='2' fill='%23e8604f'/%3E%3Crect x='17' y='11' width='9' height='9' rx='2' fill='%236ad6ad'/%3E%3C/svg%3E">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top"><i></i>R.E.D. Pony</a>
+    <nav aria-label="Sections">
+      <a href="#idea">Idea</a>
+      <a href="#toolkit">Toolkit</a>
+      <a href="#fold">The fold</a>
+      <a href="#h1">H1_2</a>
+      <a href="#drone">Drone</a>
+      <a href="#solo">SOLO</a>
+      <a href="#method">Method</a>
+      <a href="#limits">Limits</a>
+    </nav>
+    <a class="gh" href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net">GitHub</a>
+  </div>
+</header>
+
+<main class="wrap" id="top">
+
+<section class="hero" aria-labelledby="t-hero">
+  <p class="kicker">Project R.E.D. Pony · LLM editing of trained networks</p>
+  <h1 id="t-hero">Behaviours written <em>into the weights</em></h1>
+  <p class="thesis">A trained robot policy is a stack of tables of numbers. We let an LLM read them, find the room inside, and write a new behaviour straight into the weights: no retraining, same network shape, same file format. Three robots, three edits, failed attempts included.</p>
+  <div class="board">
+    <canvas id="hero-net" aria-label="Animated drawing of a two-layer network: most units are idle, some are freed and rewritten as a hand-made circuit"></canvas>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Stage of the edit" id="hero-seg">
+        <button type="button" data-k="0" aria-pressed="true">1 · Trained network</button>
+        <button type="button" data-k="1" aria-pressed="false">2 · Free idle units</button>
+        <button type="button" data-k="2" aria-pressed="false">3 · Write a circuit</button>
+      </div>
+    </div>
+    <p class="src" id="hero-cap"></p>
+  </div>
+  <div class="stats">
+    <div class="stat"><b>0</b><span>gradient steps on the edited networks</span></div>
+    <div class="stat"><b>82° → 1°</b><span>H1_2 heading drift in 30 s, walking with the turn stick at zero</span></div>
+    <div class="stat"><b>0.26–0.50°</b><span>drone yaw error after jumps up to 100°, on a network that could not yaw</span></div>
+    <div class="stat"><b>3 legs</b><span>SOLO-12: train to walk, disable a leg, let the LLM edit the network</span></div>
+  </div>
+</section>
+
+<!-- ============================================================ IDEA -->
+<section class="step" id="idea" aria-labelledby="t-idea">
+  <p class="eyebrow"><i style="background:var(--text)"></i>The idea</p>
+  <h2 id="t-idea">Why edit a network by hand when you could retrain it?</h2>
+  <div class="two">
+    <div class="prose">
+      <p>Retraining needs the training stack, the reward design, the compute and a new round of sim-to-real validation. Often the network is almost right: it walks, it hovers, it squats, and fails at one specific thing it was never asked to do.</p>
+      <p>A small policy network is not a black box when you can read every number. Most of its units turn out to be idle, the ones that work have a readable job, and a nonlinearity like ELU is enough to build integrators, clamps, products and switches. So the missing behaviour can be <em>written</em>, in the same file, next to what the network already does.</p>
+      <p>Doing this by hand is slow and error-prone. An LLM agent is good at exactly the parts that are tedious for a person: reading weight files, writing probe scripts, running the simulator, keeping a log of what failed and why, and producing a reproducible builder script (original file in, edited file out).</p>
+    </div>
+    <div class="lesson">
+      <p class="l-seen"><b>Rules</b>No gradient descent or RL on the edited network. Same layer sizes. The original file is never touched.</p>
+      <p class="l-got"><b>Allowed</b>Reading weights and activations, probing in simulation, folding idle units away, writing circuits with ELU units, solving linear systems. Anything fitted to data is declared as such.</p>
+      <p class="l-next"><b>Shown</b>Everything, in the order it happened, including the attempts that failed. Every number on this page comes from the experiment logs; drawings that are schematic say so.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ TOOLKIT -->
+<section class="step" id="toolkit" aria-labelledby="t-kit">
+  <p class="eyebrow"><i style="background:var(--circuit)"></i>Toolkit</p>
+  <h2 id="t-kit">What can you build out of ELU units?</h2>
+  <div class="prose">
+    <p>Each hidden unit computes <code>elu(w·x + b)</code>: the number itself on the right of zero, <code>eᵘ − 1</code> on the left. With a few units and well-chosen weights you get every block a controller needs. The white curve is the exact function, the violet one is what the units compute.</p>
+  </div>
+  <div class="board">
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Building block" id="kit-seg">
+        <button type="button" data-k="pass" aria-pressed="true">Pass-through</button>
+        <button type="button" data-k="abs" aria-pressed="false">|x|</button>
+        <button type="button" data-k="clamp" aria-pressed="false">Clamp</button>
+        <button type="button" data-k="sq" aria-pressed="false">x²</button>
+        <button type="button" data-k="prod" aria-pressed="false">Product</button>
+        <button type="button" data-k="gate" aria-pressed="false">Gate</button>
+      </div>
+    </div>
+    <canvas id="kit" aria-label="Plot of an ELU construction against the exact function"></canvas>
+    <div class="controls" id="kit-ctl"></div>
+    <div class="eq" id="kit-eq"></div>
+    <p class="src" id="kit-src"></p>
+  </div>
+</section>
+
+<!-- ============================================================ FOLD -->
+<section class="step" id="fold" aria-labelledby="t-fold">
+  <p class="eyebrow"><i style="background:var(--orig)"></i>The lesson that cost a crash</p>
+  <h2 id="t-fold">Add the correction before the fold, not after it.</h2>
+  <div class="two">
+    <div class="board">
+      <canvas id="fold-cv" aria-label="ELU curve with an operating point and its tangent"></canvas>
+      <div class="controls">
+        <div class="seg" role="group" aria-label="Presets" id="fold-seg">
+          <button type="button" data-k="flat" aria-pressed="true">On the flat side</button>
+          <button type="button" data-k="after" aria-pressed="false">Add after: +1.45</button>
+          <button type="button" data-k="before" aria-pressed="false">Add before: +3.5</button>
+        </div>
+      </div>
+      <div class="controls" id="fold-ctl"></div>
+      <div class="readouts" id="fold-ro"></div>
+    </div>
+    <div class="prose">
+      <p>In the drone experiment the network delivered the wrong thrust at most headings. The obvious fix was to add, at every heading, the thrust that was missing at the output. The value came out right, and the drone diverged in flight.</p>
+      <p>A unit pushed to the flat side of the ELU keeps a slope near zero. Adding a constant after the fold moves its output but not its slope, so the controller keeps the right value and loses its gain: at +90° the thrust reacted to height with 0.8 N/m instead of 61 N/m.</p>
+      <p>Adding the same amount <em>before</em> the fold slides the operating point back onto the straight side: same output, slope 1. Try the three presets: the output is the same 0.5 in the last two, the slope differs by a factor of twenty.</p>
+      <p class="src">Exact ELU curve; the starting pre-activation −3 is an example unit, as in the original write-up.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ H1 -->
+<section class="step" id="h1" aria-labelledby="t-h1">
+  <p class="eyebrow"><i style="background:var(--hold)"></i>Example 1 · Unitree H1_2 humanoid</p>
+  <h2 id="t-h1">Make a humanoid walk straight when nobody steers.</h2>
+  <div class="two">
+    <div class="prose">
+      <p>The walk-and-squat policy of the Unitree H1_2 (an MLP 465 → 512 → 256 → 128 → 27, trained with PPO in Isaac Lab and deployed on the real robot) walks well, but with the turn stick at zero it slowly turns: <b>2.84 °/s</b> on average, <b>82°</b> after 30 s. Its observations contain no heading and the network has no memory, so nothing inside it can notice the drift.</p>
+      <p>The edit gives the network a heading controller and a memory to run it:</p>
+      <ol>
+        <li><b>Make room.</b> 20 / 9 / 5 redundant units of the three hidden layers are folded by least squares into the rest of their layer (action error rms 0.005).</li>
+        <li><b>Write the circuit.</b> Yaw rate from gyro and projected gravity, a heading-error integrator and its integral, with clamps and an on/off gate, all built from ELU units.</li>
+        <li><b>Store the state in the actions.</b> The two integrator states are written to the two wrist-yaw action channels and come back one step later through <code>last_action</code>.</li>
+        <li><b>Steer through the network's own command.</b> The correction is added to the turn command the original network reads, so the robot corrects with its own trained turning gait.</li>
+      </ol>
+    </div>
+    <div class="board">
+      <pre class="code"><span class="cm"># the circuit (dt = 0.02 s)</span>
+rate = −(ω<sub>y</sub> g<sub>y</sub> + ω<sub>z</sub> g<sub>z</sub>)(1 + g<sub>x</sub>²)
+act  = gait clock running and |ω<sub>z,cmd</sub>| ≈ 0
+<span class="c">θ'</span>   = clamp(θ + dt (ω<sub>z,cmd</sub> − rate), ±0.35·act)
+<span class="c">I'</span>   = clamp(I + dt θ, ±0.30·act)
+
+<span class="cm"># memory: action 25 = 2θ, action 26 = 2I</span>
+<span class="cm"># read back next step through last_action</span>
+
+ω<sub>z</sub> seen by the network = ω<sub>z,cmd</sub> + 3θ + 3I
+
+<span class="cm"># second version: lateral hold</span>
+<span class="y">v̂</span>  = w · h<sub>1</sub> + b      <span class="cm"># ridge readout, fitted</span>
+<span class="c">p'</span> = clamp(p + dt v̂, ±0.15·act)
+v<sub>y</sub> seen by the network = v<sub>y,cmd</sub> − 2p</pre>
+      <p class="src">The lateral velocity readout <code>v̂</code> is the only part fitted to data (ridge regression on closed-loop rollouts, 3128 steady conditions).</p>
+    </div>
+  </div>
+
+  <div class="board">
+    <canvas id="h1-cv" aria-label="Top view of three robots walking: original, heading hold, heading plus lateral hold"></canvas>
+    <div class="controls">
+      <button type="button" class="btn strong" id="h1-play">Walk 30 s</button>
+      <div class="legend">
+        <span><i style="background:var(--orig)"></i>original</span>
+        <span><i style="background:var(--hold)"></i>heading hold</span>
+        <span><i style="background:var(--edit)"></i>heading + lateral hold</span>
+      </div>
+    </div>
+    <div class="readouts" id="h1-ro"></div>
+    <p class="src"><b>Schematic.</b> 0.8 m/s forward for 30 s with constant drift rates equal to the measured means (yaw 2.84 °/s for the original, lateral 2.13 and 0.32 cm/s for the two edits); real paths wobble with the gait. First panel: top view at equal scale. Second panel: lateral deviation in centimetres; the original leaves that window within a few metres.</p>
+  </div>
+
+  <div class="table">
+    <table>
+      <thead><tr><th>Python MuJoCo replica of the controller</th><th>original</th><th>heading hold</th><th>heading + lateral</th></tr></thead>
+      <tbody>
+        <tr><td>Mean absolute yaw rate (28 commands, 30 s)</td><td class="o">2.84 °/s</td><td class="h">0.017 °/s</td><td>—</td></tr>
+        <tr><td>Mean absolute yaw after 30 s</td><td class="o">81.8°</td><td class="h">1.05°</td><td>—</td></tr>
+        <tr><td>Rms distance of the path from a straight line</td><td class="o">34.8 cm</td><td class="h">1.2 cm</td><td>—</td></tr>
+        <tr><td>Mean absolute lateral drift (60 commands)</td><td class="o">31.2 cm/s</td><td class="h">2.13 cm/s</td><td class="e">0.32 cm/s</td></tr>
+        <tr><td>Worst lateral deviation in 30 s</td><td class="o">20.3 m</td><td class="h">2.25 m</td><td class="e">0.62 m</td></tr>
+        <tr><td>Mean action change per step (legs, torso)</td><td class="o">0.087</td><td class="h">0.090</td><td>—</td></tr>
+        <tr><td>Falls</td><td class="o">0</td><td class="h">0</td><td class="e">0</td></tr>
+      </tbody>
+      <caption>Heights 0.98 / 0.85 / 0.74 / 0.71 m for the heading metrics; vx −0.3 and 0.2…1.0 m/s at six heights for the lateral metrics. Yaw kicks of 1–1.5 rad/s and floor friction 0.5 / 1.5: no fall, heading back within about 2°. Not yet run in the C++ simulator or on the robot.</caption>
+    </table>
+  </div>
+
+  <div class="media-grid">
+    <figure>
+      <video src="assets/h1/standing_0.98m_0.8ms_comparison.mp4" poster="assets/h1/standing_0.98m_0.8ms_comparison.jpg" controls muted playsinline preload="none"></video>
+      <figcaption>Standing height 0.98 m, 0.8 m/s. Left to right: original, heading hold, heading + lateral hold. Red line: initial heading of the torso. Bottom: top view of the three paths.</figcaption>
+    </figure>
+    <figure>
+      <video src="assets/h1/crouched_0.74m_0.6ms_comparison.mp4" poster="assets/h1/crouched_0.74m_0.6ms_comparison.jpg" controls muted playsinline preload="none"></video>
+      <figcaption>Crouched at 0.74 m, 0.6 m/s. Same three networks, same command.</figcaption>
+    </figure>
+  </div>
+  <figure>
+    <img src="assets/h1/standing_0.98m_0.8ms_pushes_summary.jpg" alt="Time series of heading, lateral displacement, internal correction and wrist joints for the three networks, with a yaw kick at 9 s and a lateral push at 17 s" loading="lazy">
+    <figcaption>Yaw kick at 9 s, lateral push at 17 s. Rows: true heading against the heading estimated by the network (its register), lateral displacement, the internal correction fed to the original network, and the wrist joints used as memory registers. Labels in Italian, from the original analysis.</figcaption>
+  </figure>
+  <div class="lesson">
+    <p class="l-seen"><b>Seen</b>No hidden unit was unused, but some were redundant: folding them away cost an action error of 0.005 rms.</p>
+    <p class="l-got"><b>Understood</b>The best place to inject a correction is an input the network already understands (here the turn command), not the joints.</p>
+    <p class="l-next"><b>Price</b>Three wrist joints became memory registers, and a gyro bias <code>b</code> still turns the robot at <code>b</code>.</p>
+  </div>
+  <p class="src">Code, edited ONNX files and <code>weight_edit.json</code>: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/tree/main/examples/h1_heading_hold">examples/h1_heading_hold</a>. Source policy: <a href="https://github.com/gaetanotorella/H1_2_Squat_Locomotion_RL">H1_2_Squat_Locomotion_RL</a> (Apache-2.0).</p>
+</section>
+
+<!-- ============================================================ DRONE -->
+<section class="step" id="drone" aria-labelledby="t-drone">
+  <p class="eyebrow"><i style="background:var(--yaw)"></i>Example 2 · Quadrotor hover network</p>
+  <h2 id="t-drone">Teach a hover network to turn its nose.</h2>
+  <div class="two">
+    <div class="prose">
+      <p>A hover policy, an MLP 17 → 512 → 512 → 4 run every 20 ms, holds a quadrotor within 2.7 cm of its target. It reads velocity, attitude, position error, and sin/cos of the yaw error, and outputs thrust and three body rates. In training the yaw reward had weight zero.</p>
+      <p>Probed with the drone still, level and at zero error, the network does not ignore yaw at all: its yaw-rate command has an attracting rest point near <b>−50°</b> and a repelling one near <b>+140°</b>, whatever the reference. Thrust equals the weight only near −50°. The network built its own operating point.</p>
+      <p>Pick a reference and a starting heading, then release both drones. The left one runs on the measured outputs of the original network, the right one on the rewritten yaw command.</p>
+    </div>
+    <div class="board">
+      <canvas id="yaw-cv" aria-label="Two drones seen from above: the original goes to minus 50 degrees, the edited one follows the reference"></canvas>
+      <div class="controls" id="yaw-ctl"></div>
+      <div class="controls">
+        <button type="button" class="btn strong" id="yaw-go">Release</button>
+        <div class="readouts" id="yaw-ro"></div>
+      </div>
+      <p class="src"><b>Left, measured:</b> yaw-rate command of the original network at zero error, 8 headings, linearly interpolated. <b>Right, exact:</b> the rewritten command <code>ω<sub>z</sub> = 0.8·lim(1.25 sin e + 0.6 (h⁺ − h⁻))</code>. Nose only: no position, delay or noise.</p>
+    </div>
+  </div>
+
+  <div class="two flip">
+    <div class="board">
+      <canvas id="bell-cv" aria-label="Twenty-three yaw sensor units around a circle and their activations"></canvas>
+      <div class="controls" id="bell-ctl"></div>
+      <p class="src"><b>Exact:</b> <code>φᵢ = elu(20 (cos(ψ − ψᵢ) − cos 50°))</code>, 23 centres every 15.7°, valid level and to first order in the tilt.</p>
+    </div>
+    <div class="prose">
+      <h3>Neurons that measure where the nose points</h3>
+      <p>413 of the 512 first-layer units and 490 of the 512 second-layer units are idle (usage below 10⁻³ over 200 000 states). An idle unit is freed by removing its connection and adding its constant contribution to the next bias: the output does not change.</p>
+      <p>The attitude matrix already contains cos ψ and sin ψ. A freed first-layer unit with the right weights computes <code>cos(ψ − ψᵢ)</code>; subtract cos 50°, scale by 20, pass through the ELU, and you get a bump that lights up only within ±50° of its centre. <b>23 freed units became yaw sensors.</b></p>
+      <p>With them, the second-layer pre-activations are shifted so that at every heading they equal those of the network's own equilibrium at −50°: <code>Φ C = D</code>, 23 equations, 23 unknowns, no fit, no optimisation.</p>
+    </div>
+  </div>
+
+  <h3>The path, failed attempts included</h3>
+  <ol class="path">
+    <li class="diag"><span class="tag">read</span><h4>Read the file before running it.</h4><p>The yaw-error columns have norm 0.62 / 0.59, a third of the weakest other input. But the normaliser remembers a mean heading: an arrow of length 0.79 towards −36°. The visited states were not uniform in yaw.</p></li>
+    <li class="diag"><span class="tag">probe</span><h4>Probe at zero error.</h4><p>Sweeping only the heading: attracting point near −50°, repelling near +140°, thrust ≈ the weight only near −50°.</p></li>
+    <li class="diag"><span class="tag">probe</span><h4>Broken, or just shifted?</h4><p>Yaw frozen at 24 headings: the drone stops everywhere without oscillating, up to 1.43 m lower. A stable controller at every yaw, with the wrong operating point. And it brakes a 0.5 m/s motion at every yaw: it learned to rotate velocity into the body frame, a product that cannot be written by hand in the first layer.</p></li>
+    <li class="idea"><span class="tag">room</span><h4>Count the idle units.</h4><p>413 / 512 and 490 / 512 idle. More than 80 % of the network is constant.</p></li>
+    <li class="ok"><span class="tag">works</span><h4>The yaw command.</h4><p>Disconnect the old yaw error and write a new path sin(error) → unit → unit → ω<sub>z</sub>. Two extra units make a steep step near ±180°, where sin = 0 left a 157° error stuck; now about 3°.</p></li>
+    <li class="ko"><span class="tag">fails</span><h4>Add the missing thrust at the output.</h4><p>Right value, wrong gain: at +90° the thrust reacts to height with 0.8 N/m instead of 61 N/m, and the flight diverges. See <a href="#fold">the fold</a>.</p></li>
+    <li class="idea"><span class="tag">idea</span><h4>Neurons that measure yaw.</h4><p>23 freed units become bump-shaped yaw sensors.</p></li>
+    <li class="ok"><span class="tag">half</span><h4>Exact shift before the last fold.</h4><p>The offset disappears (error 1–5 cm after settling), but with 40 ms of delay the thrust oscillates at 15 headings out of 24.</p></li>
+    <li class="diag"><span class="tag">diagnose</span><h4>Why it oscillates.</h4><p>Far from −50° the vertical gain triples, up to 46 N/(m/s), above the <code>Gτ/m = π/2</code> limit of a delayed loop (38.8 at 40 ms). The lateral response flips from brake to push.</p></li>
+    <li class="ok"><span class="tag">works</span><h4>Two branches, two cures.</h4><p>Freeze yaw in the 277 first-layer units that hardly see horizontal velocity; shift only the 215 second-layer units that weigh on thrust. Each cure alone fixes one branch and spoils the other; together: error below 2.1 cm at every yaw, steady thrust up to 40 ms of delay.</p></li>
+    <li class="ko"><span class="tag">fails</span><h4>First full-simulator flight: the takeoff.</h4><p>44 N at start, climbs at 2 m/s, cuts thrust, hits the ground at 2.2 s. The offset we removed was also braking the climb. Two units on the height error now limit it (20 N/m).</p></li>
+    <li class="diag"><span class="tag">false alarm</span><h4>The next flight aborts at 1.76 s.</h4><p>Altitude jumps from 0.63 to 1.47 m in 20 ms: 42 m/s, impossible. A second simulator was publishing on the same channel. A plausibility check on the log avoided fixing a defect that did not exist.</p></li>
+    <li class="ok"><span class="tag">works</span><h4>The cube falls 6 times out of 6, then passes.</h4><p>At 1.8 m of height error the limiter removed 29 N, three times the hover thrust. One more unit gives it a ceiling (max 22 N). The cube passes with 1 cm steady error; every flight was repeated with the final file.</p></li>
+  </ol>
+
+  <details class="more">
+    <summary>The final recipe: eight moves, about 21 000 of 272 896 weights</summary>
+    <div>
+      <ol class="prose">
+        <li>Disconnect the yaw error from the old network (its zero-error value goes into the bias).</li>
+        <li>Retire 28 idle units in layer 1 and 5 in layer 2.</li>
+        <li>Freeze yaw in 277 layer-1 units: they see the nose at −50°.</li>
+        <li>Let the network settle at −50° and read its true equilibrium (nothing written).</li>
+        <li>Write 23 yaw-sensor bumps in layer 1 and the exact shift on 215 layer-2 units.</li>
+        <li>Three units cancel the remaining output residuals (harmless now: units sit on the right side of the fold).</li>
+        <li>New yaw command following sin(error), limited to 0.8 rad/s, with a steep step near ±180°.</li>
+        <li>Climb limiter: two units on the height error plus a ceiling, at most 22 N.</li>
+      </ol>
+      <div class="eq">ω<sub>z</sub> = w<sub>max</sub> · lim<sub>±1</sub>( (K / w<sub>max</sub>) sin e + (H / B)(h⁺ − h⁻) ),   h<sup>±</sup> = elu( B (± sin e − λ (1 + cos e)) )
+<span class="k">K = 1 s⁻¹, w_max = 0.8 rad/s, B = 20, λ = 2, H = 12</span>
+
+<span class="c">ΔT</span> = −(g<sub>c</sub> / B<sub>c</sub>) [ elu(B<sub>c</sub>(e<sub>z</sub> − k<sub>c</sub>)) − elu(B<sub>c</sub>(e<sub>z</sub> − t<sub>c</sub>)) − const ]
+<span class="k">g_c = 20 N/m, k_c = 0.35 m, t_c = 1.45 m, B_c = 10, at most 22 N</span></div>
+      <p class="src">3660 + 16 756 + 527 = 20 943 weights changed, almost all of them biases. The saved file reproduces the computed network within 3.6·10⁻⁴ on the outputs.</p>
+    </div>
+  </details>
+
+  <div class="table">
+    <table>
+      <thead><tr><th>Yaw mission, full simulator</th><th>reference</th><th>jump</th><th>original error</th><th>edited error</th><th>time to &lt;10°</th><th>position</th><th>peak</th></tr></thead>
+      <tbody id="yaw-tab"></tbody>
+      <caption>Six references in a row on a fixed point: 0°, 45°, 90°, −90°, 170°, 0°. Edited values: nominal / with 30 ms of extra command delay and 15 ms motor time constant. Error measured from 4 s after each jump: with the 0.8 rad/s limit a 180° jump takes about 4.7 s, so 3.47° and 2.15° are a nose still arriving, not a steady error.</caption>
+    </table>
+  </div>
+  <div class="table">
+    <table>
+      <thead><tr><th>Mission summary</th><th>original</th><th>edited</th></tr></thead>
+      <tbody id="drone-tab"></tbody>
+      <caption>Edited network: 3 flights per mission and condition. Two values: nominal / with delay. 20 flights in total, 18 completed; 2 stopped by loss of the radio link, cause not isolated.</caption>
+    </table>
+  </div>
+  <div class="lesson">
+    <p class="l-seen"><b>Seen</b>A network trained with no pressure on yaw still depends strongly on yaw: zero training error says nothing about what it does elsewhere.</p>
+    <p class="l-got"><b>Understood</b>Values live after the fold, gains live in which side of the fold each unit sits on. Every behaviour you remove must be replaced or checked.</p>
+    <p class="l-next"><b>Not tested</b>Sensor noise, wind, different mass or thrust, the onboard computer, real flight.</p>
+  </div>
+  <p class="src">Write-up with all the numbers: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/tree/main/examples/drone_yaw">examples/drone_yaw</a>. The code lives in the AC-MPC research repository and is not published here.</p>
+</section>
+
+<!-- ============================================================ SOLO -->
+<section class="step" id="solo" aria-labelledby="t-solo">
+  <p class="eyebrow"><i style="background:var(--edit)"></i>Example 3 · SOLO-12 quadruped</p>
+  <h2 id="t-solo">Break a leg, then rewrite the network to walk on three.</h2>
+  <div id="solo-body" class="two">
+    <div class="prose">
+      <p class="status"><i></i>Experiment running</p>
+      <p>The first two examples added a missing behaviour. This one asks for more: the robot changes under the network. We train a walking policy for the open-source <b>SOLO-12</b> quadruped (Open Dynamic Robot Initiative) in MuJoCo, disable one leg, measure how the original policy fails, and let the LLM edit the network until the robot walks on three legs, with the same rules: no gradient steps on the edited network, same shape, every fitted part declared.</p>
+      <ol>
+        <li>Train a velocity-tracking walking policy (PPO, MLP with ELU, non-privileged observations).</li>
+        <li>Disable one leg in simulation and measure the original policy on three legs.</li>
+        <li>LLM edit: probe, free idle units, write the circuits, test, look at the failures, repeat.</li>
+        <li>Compare original on 4 and 3 legs, edited on 3 and 4 legs.</li>
+      </ol>
+    </div>
+    <div class="lesson">
+      <p class="l-seen"><b>Status</b>Results, videos and the edit will be published here when the experiment is complete, whether or not it succeeds.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ METHOD -->
+<section class="step" id="method" aria-labelledby="t-method">
+  <p class="eyebrow"><i style="background:var(--circuit)"></i>Method</p>
+  <h2 id="t-method">The editing loop, as the LLM runs it.</h2>
+  <div class="loop">
+    <div class="card"><span class="n">01</span><h4>Read</h4><p>Load the weights and the normaliser. Column norms, means, which inputs the network barely reads. Cheapest test, often the most telling.</p></div>
+    <div class="card"><span class="n">02</span><h4>Probe</h4><p>Run the network on controlled states: sweep one variable, freeze the rest. Find what it really does, not what the reward asked for.</p></div>
+    <div class="card"><span class="n">03</span><h4>Make room</h4><p>Measure unit usage over many states. Fold idle or redundant units into the next bias or into their neighbours by least squares.</p></div>
+    <div class="card"><span class="n">04</span><h4>Write</h4><p>Build the missing behaviour from ELU units: sensors, integrators, clamps, gates. Inject it where the network already listens, before the fold.</p></div>
+    <div class="card"><span class="n">05</span><h4>Test</h4><p>Fast simulator first, then the full one. Fixed protocol, the original as a baseline, delay and disturbances on.</p></div>
+    <div class="card"><span class="n">06</span><h4>Look at failures</h4><p>Diagnose before editing again: gains, operating points, logs. Check that the defect is real. Bound every correction.</p></div>
+  </div>
+  <div class="prose">
+    <p>Every edit ends as a builder script that takes the original file and produces the edited one, plus a <code>weight_edit.json</code> with the freed units, the parameters and the sha256 of both files. The edited network is a normal ONNX MLP: the deploy code does not change.</p>
+  </div>
+</section>
+
+<!-- ============================================================ LIMITS -->
+<section class="step" id="limits" aria-labelledby="t-limits">
+  <p class="eyebrow"><i style="background:var(--orig)"></i>Limits</p>
+  <h2 id="t-limits">What this does not show.</h2>
+  <div class="prose">
+    <ul>
+      <li><b>Simulation only.</b> The H1_2 edits ran in a Python replica of the controller, the drone edit in a fast and a full simulator, both without sensor noise. None of the edited networks has run on a real robot yet.</li>
+      <li><b>Robustness.</b> The original networks were trained with domain randomisation; the edits are built on one model. How much robustness survives is not measured.</li>
+      <li><b>Hand-tuned parameters.</b> Thresholds, gains, number and shape of the sensor units were chosen with few attempts. They work; how far they are from the edges is mostly unknown.</li>
+      <li><b>Side effects.</b> H1_2 gives up three wrist joints as memory; the drone's limiter is tuned to one hover thrust and one motor curve.</li>
+      <li><b>Statistics.</b> The simulators are nearly deterministic: a few repetitions measure repeatability, not robustness. No confidence intervals are claimed.</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><b>Project R.E.D. Pony</b> · <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net">github.com/AntoBuo-Dev/red-pony-llm-editing-net</a></p>
+    <p>H1_2 source policy, robot description and controller conventions: <a href="https://github.com/gaetanotorella/H1_2_Squat_Locomotion_RL">H1_2_Squat_Locomotion_RL</a> (Gaetano Torella, University of Naples Federico II, PRISMA Lab), Apache-2.0. SOLO-12: Open Dynamic Robot Initiative.</p>
+    <p>Edits designed and carried out with an LLM agent (Claude), checked against simulation. Numbers on this page come from the experiment logs; drawings marked as schematic are illustrations.</p>
+  </div>
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>
