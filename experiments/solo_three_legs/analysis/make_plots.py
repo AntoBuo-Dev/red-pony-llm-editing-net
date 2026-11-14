@@ -21,8 +21,10 @@ from onnx_mlp import NumpyPolicy, load_onnx_layers  # noqa: E402
 
 OUT = os.path.join(ROOT, "results")
 # validated categorical slots 1-3 (dataviz reference palette, light surface)
-COL = {"original": "#2a78d6", "edited": "#eb6834", "trained_3leg_reference": "#1baf7a"}
-LABEL = {"original": "original", "edited": "edited (by hand)", "trained_3leg_reference": "RL fine-tuned on 3 legs (reference)"}
+COL = {"original": "#2a78d6", "edited": "#eb6834", "edited_v2": "#6250d6", "trained_3leg_reference": "#1baf7a"}
+LABEL = {"original": "original", "edited": "edited v1 (by hand)", "edited_v2": "edited v2 (+ heading hold)",
+         "trained_3leg_reference": "RL fine-tuned on 3 legs (reference)"}
+POLS = ["original", "edited", "edited_v2", "trained_3leg_reference"]
 SURF, INK, INK2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e4e3df"
 plt.rcParams.update({"figure.facecolor": SURF, "axes.facecolor": SURF, "savefig.facecolor": SURF, "text.color": INK,
                      "axes.labelcolor": INK2, "xtick.color": INK2, "ytick.color": INK2, "axes.edgecolor": GRID,
@@ -41,14 +43,14 @@ def bars(R):
     """summary bars: two panels (four legs / three legs), bars per policy."""
     ev = R.get("heldout_seeds", R["from_start"])
     summ = {(s["policy"], s["fault"]): s for s in ev["summary"]}
-    pols = [p for p in ("original", "edited", "trained_3leg_reference") if any(k[0] == p for k in summ)]
+    pols = [p for p in POLS if any(k[0] == p for k in summ)]
     metrics = [("turn_rate_ratio", "turn rate / command (turn and spin commands)"),
                ("broken_leg_ground_frac", "broken leg touching the ground [% of time]"),
                ("fwd_speed_ratio", "forward speed / command (0.2-0.5 m/s)"),
                ("fwd_abs_lat_drift_cm_s", "|lateral drift| walking forward [cm/s]"),
                ("fwd_abs_heading_drift_deg", "|heading change| in 20 s walking forward [deg]"),
                ("mean_tilt_deg", "mean body tilt [deg]")]
-    fig, axes = plt.subplots(2, 3, figsize=(13, 6.8))
+    fig, axes = plt.subplots(2, 3, figsize=(14, 6.8))
     for ax, (key, title) in zip(axes.flat, metrics):
         xs, labels = [], []
         x = 0
@@ -64,7 +66,7 @@ def bars(R):
                     v = 100 * v
                 ax.bar(x, v, width=0.8, color=COL[p], edgecolor=SURF, linewidth=2,
                        hatch="//" if p == "trained_3leg_reference" else None)
-                ax.text(x, v, f"{v:.0f}" if abs(v) >= 10 else f"{v:.2f}", ha="center", va="bottom", fontsize=9, color=INK)
+                ax.text(x, v, f"{v:.0f}" if abs(v) >= 10 else (f"{v:.1f}" if abs(v) >= 1 else f"{v:.2f}"), ha="center", va="bottom", fontsize=8, color=INK)
                 xs.append(x); labels.append(fl)
                 x += 1
             x += 0.6
@@ -77,7 +79,7 @@ def bars(R):
         ax.grid(axis="y", color=GRID, linewidth=0.8); ax.set_axisbelow(True)
         ymax = ax.get_ylim()[1]; ax.set_ylim(0, ymax * 1.12 if ymax > 0 else 1)
     handles = [plt.Rectangle((0, 0), 1, 1, color=COL[p], hatch="//" if p == "trained_3leg_reference" else None) for p in pols]
-    fig.legend(handles, [LABEL[p] for p in pols], loc="upper center", ncol=len(pols), frameon=False)
+    fig.legend(handles, [LABEL[p] for p in pols], loc="upper center", ncol=len(pols), frameon=False, fontsize=9)
     fig.suptitle(" ", fontsize=4)
     fig.text(0.01, 0.005, "MuJoCo simulation, leg broken from the start, 11 commands x 10 held-out seeds (100-109) x 20 s per condition; "
              "no falls. Passive-leg condition (not plotted): original and edited fall within 1 s in 55/55 episodes.",
@@ -89,10 +91,11 @@ def bars(R):
 
 def trajectories(R):
     conds = [("original", None, "original, four legs"), ("original", "locked", "original, front-left leg locked"),
-             ("edited", "locked", "edited, front-left leg locked"), ("edited", None, "edited, four legs")]
+             ("edited", "locked", "edited v1, front-left leg locked"), ("edited_v2", "locked", "edited v2, front-left leg locked"),
+             ("edited_v2", None, "edited v2, four legs")]
     if os.path.exists(policy_path("trained_3leg_reference")):
         conds.append(("trained_3leg_reference", "locked", "RL fine-tuned (reference), leg locked"))
-    fig, axes = plt.subplots(1, len(conds), figsize=(3.3 * len(conds), 3.9), sharex=True, sharey=True)
+    fig, axes = plt.subplots(1, len(conds), figsize=(3.0 * len(conds), 3.9), sharex=True, sharey=True)
     for ax, (p, fault, title) in zip(axes, conds):
         pol = load_pol(p)
         for seed in range(5):
@@ -114,8 +117,8 @@ def trajectories(R):
 
 def gait_diagrams():
     conds = [("original", None, "original, four legs"), ("original", "locked", "original, front-left leg locked"),
-             ("edited", "locked", "edited, front-left leg locked")]
-    fig, axes = plt.subplots(len(conds), 1, figsize=(10, 6.2), sharex=True)
+             ("edited", "locked", "edited v1, front-left leg locked"), ("edited_v2", "locked", "edited v2, front-left leg locked")]
+    fig, axes = plt.subplots(len(conds), 1, figsize=(10, 8.0), sharex=True)
     rows = ["FL", "FR", "HL", "HR", "broken leg\n(knee/shin/foot)"]
     for ax, (p, fault, title) in zip(axes, conds):
         pol = load_pol(p)
@@ -150,7 +153,8 @@ def speed_tracking(R):
     per = R.get("heldout_seeds", R["from_start"])["per_command"]
     fig, ax = plt.subplots(figsize=(5.6, 4.2))
     for p, fault, ls, lab in (("original", "none", "-", "original, four legs"), ("original", "locked", "--", "original, leg locked"),
-                              ("edited", "locked", "-", "edited, leg locked"), ("edited", "none", ":", "edited, four legs"),
+                              ("edited", "locked", "-", "edited v1, leg locked"), ("edited", "none", ":", "edited v1, four legs"),
+                              ("edited_v2", "locked", "-", "edited v2, leg locked"),
                               ("trained_3leg_reference", "locked", "-.", "RL reference, leg locked")):
         pts = sorted([(a["cmd"][0], a["vx_mean"]) for a in per if a["policy"] == p and a["fault"] == fault and a["command"].startswith("fwd")])
         if not pts:
@@ -191,7 +195,7 @@ def midwalk(R):
     if "fault_midwalk" not in R:
         return
     per = R["fault_midwalk"]["per_command"]
-    pols = [p for p in ("original", "edited", "trained_3leg_reference") if any(a["policy"] == p for a in per)]
+    pols = [p for p in POLS if any(a["policy"] == p for a in per)]
     cmds = [c for c in ("stand", "fwd_0.3", "fwd_0.5", "turn_left", "turn_right") if any(a["command"] == c for a in per)]
     fig, ax = plt.subplots(figsize=(7.5, 3.6))
     wdt = 0.8 / len(pols)
@@ -211,9 +215,64 @@ def midwalk(R):
     plt.close(fig)
 
 
+def goal_plots():
+    f = os.path.join(OUT, "goal_reaching.json")
+    if not os.path.exists(f):
+        return
+    G = json.load(open(f))
+    goals = G["protocol"]["goals"]
+    runs = [r for r in G["runs"] if r["fault"] == "locked"]
+    fig, axes = plt.subplots(2, 4, figsize=(15, 6.6), sharex=True, sharey=True)
+    for i, mode in enumerate(("A", "B")):
+        for j, p in enumerate(POLS):
+            ax = axes[i, j]
+            for r in [r for r in runs if r["policy"] == (p if p != "edited" else "edited_v1") and r["mode"] == mode]:
+                pth = np.array(r["path"])
+                ax.plot(pth[:, 0], pth[:, 1], color=COL[p], linewidth=1.6, alpha=0.9 if r["success"] else 0.35)
+            for gname, (gx, gy) in goals.items():
+                ax.add_patch(plt.Circle((gx, gy), 0.3, fill=False, color=INK, linewidth=1.2))
+            ok = sum(r["success"] for r in runs if r["policy"] == (p if p != "edited" else "edited_v1") and r["mode"] == mode)
+            n = sum(1 for r in runs if r["policy"] == (p if p != "edited" else "edited_v1") and r["mode"] == mode)
+            ax.set_title(f"{LABEL[p]}\nmode {mode}: {ok}/{n} goals reached", loc="left", fontsize=9, color=INK)
+            ax.set_aspect("equal"); ax.grid(color=GRID, linewidth=0.8); ax.set_axisbelow(True)
+            ax.set_xlim(-1.5, 6.5); ax.set_ylim(-3.5, 3.5)
+            if i == 1: ax.set_xlabel("x [m]")
+            if j == 0: ax.set_ylabel("y [m]")
+    fig.text(0.01, 0.005, "Front-left leg locked, 10 held-out seeds x 3 goals (circles: 0.3 m success radius). Mode A: fixed command "
+             "0.3 m/s toward the goal; mode B: joystick steering wz = clip(1.0 x bearing error, 0.5). Faded = goal not reached.",
+             color=INK2, fontsize=8)
+    fig.tight_layout(rect=(0, 0.03, 1, 1))
+    fig.savefig(os.path.join(OUT, "goal_paths.png"), dpi=120)
+    plt.close(fig)
+    S = G["summary"]
+    fig, axes = plt.subplots(1, 2, figsize=(12, 3.8), sharey=True)
+    gl = list(goals)
+    for ax, mode in zip(axes, ("A", "B")):
+        wdt = 0.8 / len(POLS)
+        for i, p in enumerate(POLS):
+            pn = p if p != "edited" else "edited_v1"
+            v = [100 * next((x["success_rate"] for x in S if x["policy"] == pn and x["mode"] == mode and x["goal"] == g
+                             and x["fault"] == "locked"), 0) for g in gl]
+            xs = np.arange(len(gl)) + (i - (len(POLS) - 1) / 2) * wdt
+            ax.bar(xs, v, width=wdt * 0.92, color=COL[p], edgecolor=SURF, linewidth=2, label=LABEL[p],
+                   hatch="//" if p == "trained_3leg_reference" else None)
+            for xx, vv in zip(xs, v):
+                ax.text(xx, vv, f"{vv:.0f}", ha="center", va="bottom", fontsize=8)
+        ax.set_xticks(range(len(gl))); ax.set_xticklabels([f"goal {g}" for g in gl])
+        ax.set_title(f"mode {mode}: " + ("fixed command, network alone" if mode == "A" else "joystick steering toward the goal"),
+                     loc="left", fontsize=10)
+        ax.grid(axis="y", color=GRID, linewidth=0.8); ax.set_axisbelow(True); ax.set_ylim(0, 112)
+    axes[0].set_ylabel("goal reached [% of 10 runs]")
+    h, l = axes[0].get_legend_handles_labels()
+    fig.legend(h, l, loc="upper center", ncol=4, frameon=False, fontsize=9)
+    fig.tight_layout(rect=(0, 0, 1, 0.9))
+    fig.savefig(os.path.join(OUT, "goal_summary.png"), dpi=130)
+    plt.close(fig)
+
+
 def main():
     R = json.load(open(os.path.join(OUT, "results.json")))
-    bars(R); speed_tracking(R); midwalk(R); training_curve(); trajectories(R); gait_diagrams()
+    goal_plots(); bars(R); speed_tracking(R); midwalk(R); training_curve(); trajectories(R); gait_diagrams()
     print("plots written to", OUT)
 
 

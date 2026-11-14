@@ -59,7 +59,7 @@ def main():
             policy="MLP 47 -> 512 -> 256 -> 128 -> 12, ELU",
             failure="front-left leg: motors off, joints locked at a tucked pose (HAA 0, HFE 1.6, KFE -2.9 rad)",
             training=dict(original=train_info("solo_walk"), trained_3leg_reference=train_info("solo_3leg_finetune")),
-            onnx_sha256={p: sha(os.path.join(ROOT, "policies", p, "policy.onnx")) for p in ("original", "edited", "trained_3leg_reference")},
+            onnx_sha256={p: sha(os.path.join(ROOT, "policies", p, "policy.onnx")) for p in ("original", "edited", "edited_v2", "trained_3leg_reference")},
             only_simulation=True),
     )
     for key, fn in (("from_start", "eval_from_start.json"), ("fault_midwalk", "eval_fault_while_walking.json"),
@@ -72,17 +72,31 @@ def main():
                 for a in ev["per_command"]:
                     eps = [e for e in ev["episodes"] if e["policy"] == a["policy"] and e["command"] == a["command"]]
                     a["recovered"] = int(sum(e["broken_leg_ground_frac"] < 0.05 and not e["fell"] for e in eps))
+    f = os.path.join(RES, "goal_reaching.json")
+    if os.path.exists(f):
+        g = json.load(open(f))
+        out["goal_reaching"] = dict(protocol=g["protocol"], summary=g["summary"],
+                                    note="per-run paths and outcomes in results/goal_reaching.json")
     f = os.path.join(RES, "eval_friction_sweep.json")
     if os.path.exists(f):
         out["friction_sweep"] = json.load(open(f))
     f = os.path.join(RES, "attempts.json")
     if os.path.exists(f):
         out["attempts"] = json.load(open(f))
+    f = os.path.join(RES, "attempts_v2.json")
+    if os.path.exists(f):
+        out["attempts_v2"] = json.load(open(f))
     f = os.path.join(ROOT, "policies", "edited", "weight_edit.json")
     if os.path.exists(f):
         we = json.load(open(f))
         out["edit"] = {k: we[k] for k in ("design", "checks", "freeing_action_error", "fault_signal", "bell_synthesis",
                                           "changed_entries", "fitted_to_data") if k in we}
+    f = os.path.join(ROOT, "policies", "edited_v2", "weight_edit.json")
+    if os.path.exists(f):
+        we = json.load(open(f))
+        out["edit_v2"] = {k: we[k] for k in ("v2_parameters", "checks", "freeing_action_error", "predictor_error",
+                                             "fl_readout_error", "injection_noise_four_legs_rad_s", "changed_entries",
+                                             "fitted_to_data", "m_v", "register_basis_columns_e_v_e1_e2") if k in we}
     json.dump(out, open(os.path.join(RES, "results.json"), "w"), indent=1)
     print("wrote", os.path.join(RES, "results.json"))
     for s in out.get("from_start", {}).get("summary", []):

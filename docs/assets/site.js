@@ -649,8 +649,9 @@
     const fr = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.25];
     const S = [
       { col: C.orig, vx: [0.316, 0.308, 0.314, 0.294, 0.278, 0.271, 0.268, 0.276], leg: [30.6, 29.4, 30.1, 31.1, 32.0, 34.3, 34.9, 36.0] },
-      { col: C.edit, vx: [-0.198, -0.195, 0.006, 0.233, 0.241, 0.224, 0.124, 0.108], leg: [0, 0, 0, 0, 0, 5.4, 52.8, 57.0] },
-      { col: C.edit, alpha: 0.45, dash: [5, 4], vx: [0.311, 0.31, 0.311, 0.31, 0.308, 0.305, 0.301, 0.293], leg: null },
+      { col: C.edit, alpha: 0.5, vx: [-0.198, -0.195, 0.006, 0.233, 0.241, 0.224, 0.124, 0.108], leg: [0, 0, 0, 0, 0, 5.4, 52.8, 57.0] },
+      { col: C.edit, vx: [-0.214, -0.049, 0.203, 0.236, 0.238, 0.169, 0.118, 0.106], leg: [0, 0, 0, 0, 0, 34.0, 58.6, 56.0] },
+      { col: C.edit, dash: [5, 4], vx: [0.313, 0.312, 0.313, 0.312, 0.31, 0.307, 0.303, 0.295], leg: null },
       { col: C.unit, vx: [0.264, 0.264, 0.263, 0.262, 0.262, 0.264, 0.264, 0.257], leg: [0, 0, 0, 0, 0, 0, 0, 0] }
     ];
     fig('fric-cv', {
@@ -663,8 +664,8 @@
         const B = g.axes(Object.assign({}, pB, { xr: [0.45, 1.3], yr: [0, 65], xt: [0.5, 0.7, 0.9, 1.1, 1.3], yt: [0, 20, 40, 60], xf: v => fmt(v, 1), xl: 'floor friction', yl: 'broken leg on the floor [%]' }));
         A.clip(() => { g.line(pA.x, A.Y(0), pA.x + pA.w, A.Y(0), C.line, 1); g.line(pA.x, A.Y(0.3), pA.x + pA.w, A.Y(0.3), C.faint, 1, [4, 4]); });
         g.text('command', pA.x + pA.w - 2, A.Y(0.3) - 5, { size: 11, align: 'right' });
-        A.clip(() => { g.c.fillStyle = 'rgba(106,214,173,0.08)'; g.c.fillRect(A.X(0.75), pA.y, A.X(1.05) - A.X(0.75), pA.h); });
-        g.text('edit works', A.X(0.9), pA.y + 12, { size: 11, align: 'center', col: C.edit });
+        A.clip(() => { g.c.fillStyle = 'rgba(106,214,173,0.08)'; g.c.fillRect(A.X(0.65), pA.y, A.X(1.05) - A.X(0.65), pA.h); });
+        g.text('edits work', A.X(0.85), pA.y + 12, { size: 11, align: 'center', col: C.edit });
         S.forEach(s => {
           const pts = fr.map((x, i) => [A.X(x), A.Y(s.vx[i])]);
           A.clip(() => g.poly(pts, s.col, 2.2, s.dash, s.alpha));
@@ -681,7 +682,7 @@
     const cv = $('gait-cv'); if (!cv) return;
     let data = null;
     const f = fig('gait-cv', {
-      ratio: 0.5, ratioNarrow: 1.1, minH: 300, maxH: 520,
+      ratio: 0.66, ratioNarrow: 1.45, minH: 380, maxH: 680,
       draw(g) {
         if (!data) { g.text('loading…', g.w / 2, g.h / 2, { align: 'center' }); return; }
         const rows = ['FL', 'FR', 'HL', 'HR', 'broken'];
@@ -713,6 +714,57 @@
       }
     });
     fetch('assets/data/solo_gait.json').then(r => { if (!r.ok) throw 0; return r.json(); }).then(d => { data = d; f.redraw(); }).catch(() => { cv.closest('.board').hidden = true; });
+  })();
+
+  // ================================================================= 11. SOLO goal reaching (measured, loaded from JSON)
+  (function goals() {
+    const cv = $('goal-cv'); if (!cv) return;
+    const P = [
+      { key: 'original', name: 'original', col: C.orig },
+      { key: 'edited_v1', name: 'edited v1', col: C.edit, alpha: 0.55 },
+      { key: 'edited_v2', name: 'edited v2', col: C.edit },
+      { key: 'trained_3leg_reference', name: 'RL reference', col: C.unit }
+    ];
+    let data = null, mode = 'A', goal = '4m';
+    const f = fig('goal-cv', {
+      ratio: 0.3, ratioNarrow: 1.05, minH: 260, maxH: 420,
+      draw(g) {
+        if (!data) { g.text('loading…', g.w / 2, g.h / 2, { align: 'center' }); return; }
+        const cols = g.narrow ? 2 : 4, rows = Math.ceil(P.length / cols);
+        const gap = 14, pw = (g.w - gap * (cols - 1)) / cols, ph = (g.h - gap * (rows - 1)) / rows;
+        const xr = [-0.6, 5.0], yr = [-1.7, 1.9];
+        const G = data.goals[goal], R = data.radius_m;
+        P.forEach((p, k) => {
+          const ox = (k % cols) * (pw + gap), oy = Math.floor(k / cols) * (ph + gap);
+          const top = oy + 34, bot = oy + ph - 6, h = bot - top;
+          const s = Math.min((pw - 8) / (xr[1] - xr[0]), h / (yr[1] - yr[0]));
+          const cx = ox + 4 + (pw - 8 - s * (xr[1] - xr[0])) / 2, cy = top + (h - s * (yr[1] - yr[0])) / 2;
+          const X = x => cx + (x - xr[0]) * s, Y = y => cy + (yr[1] - y) * s;
+          const sm = data.summary.find(q => q.policy === p.key && q.fault === 'locked' && q.mode === mode && q.goal === goal);
+          g.text(p.name, ox + 4, oy + 14, { size: 13, weight: 600, col: p.col });
+          if (sm) g.text(sm.successes + ' / ' + sm.n + ' reached', ox + pw - 4, oy + 14, { size: 12, font: 'num', align: 'right', col: sm.successes ? C.text : C.orig });
+          const c = g.c; c.save(); c.beginPath(); c.rect(X(xr[0]), Y(yr[1]), (xr[1] - xr[0]) * s, (yr[1] - yr[0]) * s); c.clip();
+          c.fillStyle = C.panel; c.fillRect(X(xr[0]), Y(yr[1]), (xr[1] - xr[0]) * s, (yr[1] - yr[0]) * s);
+          for (let gx = 0; gx <= 5; gx++) g.line(X(gx), Y(yr[1]), X(gx), Y(yr[0]), C.grid, 1);
+          for (let gy = -1; gy <= 1; gy++) g.line(X(xr[0]), Y(gy), X(xr[1]), Y(gy), C.grid, 1);
+          g.line(X(0), Y(0), X(G[0]), Y(G[1]), C.faint, 1, [3, 4]);
+          g.dot(X(G[0]), Y(G[1]), R * s, 'rgba(232,236,241,0.08)', C.text, 1.4);
+          data.runs.filter(r => r.policy === p.key && r.fault === 'locked' && r.mode === mode && r.goal === goal).forEach(r => {
+            g.poly(r.x.map((x, i) => [X(x), Y(r.y[i])]), p.col, 1.8, null, p.alpha === undefined ? 0.9 : p.alpha);
+            const e = [X(r.x[r.x.length - 1]), Y(r.y[r.y.length - 1])];
+            if (r.success) g.dot(e[0], e[1], 3.5, p.col);
+            else { g.line(e[0] - 4, e[1] - 4, e[0] + 4, e[1] + 4, p.col, 1.8); g.line(e[0] - 4, e[1] + 4, e[0] + 4, e[1] - 4, p.col, 1.8); }
+          });
+          g.dot(X(0), Y(0), 3.5, C.text);
+          c.restore();
+        });
+        $('goal-src').innerHTML = '<b>Measured.</b> Front-left leg locked, top view, 1 m grid; start at the white dot, goal = circle of 0.3 m. Paths of 5 seeds per panel (dot = reached, × = time ran out, lines leaving the frame kept walking off); the count is over 10 held-out seeds. ' +
+          (mode === 'A' ? 'Network only: the command is fixed at 0.3 m/s towards the goal at the start and never changes.' : 'Joystick: the commanded turn rate follows the bearing error to the goal, at most 0.5 rad/s.');
+      }
+    });
+    segmented('goal-mode', k => { mode = k; f.redraw(); });
+    segmented('goal-goal', k => { goal = k; f.redraw(); });
+    fetch('assets/data/goal_paths.json').then(r => { if (!r.ok) throw 0; return r.json(); }).then(d => { data = d; f.redraw(); }).catch(() => { cv.closest('.board').hidden = true; });
   })();
 
   // ================================================================= tables

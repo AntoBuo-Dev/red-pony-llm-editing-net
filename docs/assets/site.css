@@ -180,3 +180,4 @@ footer p { margin: 0 0 8px; max-width: 60em; }
 .opmap td { font-family: var(--f-ui) !important; font-size: 12.5px !important; color: var(--text); }
 .opmap td:not(:first-child) { text-align: center; }
 .opmap th:not(:first-child) { text-align: center; font-family: var(--f-num); color: var(--circuit); }
+.tag-fit { display: inline-block; font: 500 11px/1 var(--f-ui); letter-spacing: .05em; text-transform: uppercase; padding: 4px 7px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--hold) 45%, transparent); color: var(--hold); vertical-align: 2px; margin-left: 4px; }

@@ -21,8 +21,8 @@ from sim_harness import run_episode  # noqa: E402
 from onnx_mlp import NumpyPolicy, load_onnx_layers  # noqa: E402
 
 FRICTIONS = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.25]
-POLICIES = ["original", "edited", "trained_3leg_reference"]
-COL = {"original": "#2a78d6", "edited": "#eb6834", "trained_3leg_reference": "#1baf7a"}
+POLICIES = ["original", "edited", "edited_v2", "trained_3leg_reference"]
+COL = {"original": "#2a78d6", "edited": "#eb6834", "edited_v2": "#6250d6", "trained_3leg_reference": "#1baf7a"}
 
 
 def _job(a):

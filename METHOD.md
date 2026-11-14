@@ -125,10 +125,19 @@ slopes `σ'(p)` of the downstream units, hence the gains of the controller.
 channels `R` and write a state update `z_t = F(z_{t−1}, x_t)` (built with O5) into their rows:
 `a_t[R] = κ z_t`; at the next step `z_{t−1} = a_{t−1}[R]/κ`.
 
-*Requirements:* the original's own use of `a_{t−1}[R]` is replaced by a constant (an O3 on those
-columns: `b₀ += W₀[:, R] m_R`, `W₀[:, R] = 0`); the actuators on `R` now follow the register (a
-declared side effect), unless they are idle in the target condition (a broken leg), in which case
-the register must be gated off in the nominal condition.
+*Requirements:* the original's own use of `a_{t−1}[R]` must be replaced, because those inputs now
+carry the register. Two ways, both an O3 on those columns:
+
+- **constant fold** (exact): `b₀ += W₀[:, R] m_R`, `W₀[:, R] = 0`. Enough when the original barely
+  needs `a_{t−1}[R]` (H1_2 wrists);
+- **fitted predictor**: the original units read `â_R = M x_{−R}`, a ridge prediction of
+  `a_{t−1}[R]` from the other inputs: `W₀[:, −R] += W₀[:, R] M`, `W₀[:, R] = 0`. Needed when the
+  original does use those inputs in the nominal condition (SOLO v2: the constant fold turned the
+  four-leg heading drift from 2° into 32° in 20 s). `M` is declared as fitted.
+
+The actuators on `R` follow the register (a declared side effect), unless they are idle in the
+target condition (a broken leg); then the channels must keep their normal behaviour in the nominal
+condition, which needs O9.
 
 ### O8 — Gated output injection
 
@@ -138,6 +147,21 @@ the register must be gated off in the nominal condition.
 stay where they were on the fold. Use it only when they are already at the right operating point;
 otherwise use O6 or O3/O4 first (the drone's divergent flight, §5.2).
 
+### O9 — Gated output-row replacement
+
+To give output rows `R` a new meaning in a condition `F` (detected by O4/O5) while keeping them
+nominal otherwise: fit a readout `L(h_{L−1}) ≈ f_R(x)` of the original rows from the previous
+hidden layer on nominal 𝒟, pass it through last-layer units gated off by `F`
+(`σ(L_j + B − S F) − σ(B − S F)`), and set `W_L[R, :]` to these units plus the new content gated on
+by `F`:
+
+```
+a′_R = (1 − F) · L(h_{L−1}) + F · new_R(x)
+```
+
+*Guarantee:* with `F = 1` the readout contributes exactly 0 and `a′_R = new_R`; with `F = 0`,
+`a′_R` equals the readout, whose residual on nominal 𝒟 is measured and reported.
+
 ## 3. Procedure
 
 | step | what | output |
@@ -146,7 +170,7 @@ otherwise use O6 or O3/O4 first (the drone's divergent flight, §5.2).
 | P2 probe | `f` on controlled states sweeping one variable; equilibria; Jacobians `∂f/∂x` at operating points | where it is broken: value, operating point or gain |
 | P3 room | usage census `u_j`; O2 for idle units, O1 for redundant ones | free units per layer, fold error |
 | P4 prototype | wrap the unchanged `f` with the intended input and output changes, test in simulation | a design that works before it is compiled |
-| P5 compile | write the design with O3–O8 into the freed units | `policy.onnx`, `weight_edit.json`, checks: same shapes, ONNX vs numpy, compiled vs prototype `max |Δa|` |
+| P5 compile | write the design with O3–O9 into the freed units | `policy.onnx`, `weight_edit.json`, checks: same shapes, ONNX vs numpy, compiled vs prototype `max |Δa|` |
 | P6 validate | fixed protocol, original as baseline, nominal condition (the edit must not break it), ablations, seeds never used during design | results table, limits |
 
 Rules that came out of the examples:
@@ -210,5 +234,15 @@ The failed attempt "add the missing thrust at the output" was an O8 where O6 was
 
 O8 is safe here because O4 has already moved the original units to the operating point they have
 on four legs ("hiding the posture"); without O4 the robot leans on the broken leg 74 % of the time.
-v2 (in progress) adds a heading hold with O5 + O7, using the dead leg's action channels as
-registers, gated off on four legs.
+
+**v2, heading hold** (adds to v1; 62 / 15 / 14 units freed in total, fold error rms 0.0019):
+
+| piece | operator | layer / size | parameters |
+|---|---|---|---|
+| H1 integrator ported: rate, θ, I, clamps, gate on `F` | O5 | 16 / 9 / 5 units | θ ±0.20, I ±0.34, y = 3θ + 1.5I capped at 1.11 rad/s |
+| registers θ, I, y in the dead leg's three action channels | O7 | FL outputs 0–2 | exact; error ≤ 0.005 rad (θ, I), 0.017 rad/s (y) |
+| original units stop reading `last_action[FL]` | O7, fitted predictor | first layer, 44 columns | ridge on v1 rollouts, four and three legs (declared) |
+| `ω_z` seen = `ω_z + y` | O3 on the register channel | first layer | exact with the leg broken; on four legs yaw-command noise std 0.055 rad/s |
+| FL rows keep walking on four legs, carry registers on three | O9 | 3 + 1 last-layer units, FL rows | readout residual on four legs rms 0.010–0.018 |
+
+O2 and O6 were not needed: idle units are freed by the O1 fold.

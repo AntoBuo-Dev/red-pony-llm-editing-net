@@ -1,0 +1,420 @@
+{
+  "source_policy": "../original",
+  "source_onnx_sha256": "97c60b95d34f9592a348d5f0294879cf821b8800d8b0465cbffdd9f109547932",
+  "onnx_sha256": "c138e1703d567d503b80979d62d6419419e38e937fbc708234dbce552d79b652",
+  "v1_policy": "../edited",
+  "v1_onnx_sha256": "d2dfdf06dffe2617253fe5f3a8c297edf189c4405d37072f55c6c342b0d6a8b5",
+  "method": "hand edit, no training: v1 (three-leg gait) + v2 heading hold with registers in the dead leg's action channels",
+  "v1_design": {
+    "foot_shift": {
+      "FR": [
+        0.06,
+        0.11,
+        -0.02
+      ],
+      "HL": [
+        0.06,
+        0.06,
+        -0.02
+      ],
+      "HR": [
+        0.06,
+        0.06,
+        -0.02
+      ]
+    },
+    "fr_swings": [
+      [
+        0.4,
+        0.1
+      ],
+      [
+        0.9,
+        0.1
+      ]
+    ],
+    "fr_nominal_swing": [
+      0.5,
+      0.45
+    ],
+    "cmd_trim": [
+      0.7,
+      0.2,
+      0.2
+    ],
+    "yaw_K": 0.5,
+    "n_bells": 40,
+    "bell_halfwidth": 1.5
+  },
+  "v2_parameters": {
+    "K_th": 3.0,
+    "K_I": 1.5,
+    "L_th": 0.2,
+    "L_I": 0.34,
+    "s1": 1.0,
+    "s2": 1.0,
+    "s_y": 4.0,
+    "dt": 0.02,
+    "S": 200.0,
+    "Sg": 2000.0,
+    "B": 1.0,
+    "alpha": 2.0,
+    "beta": 0.4,
+    "beta2": 0.1,
+    "sn": 10.0,
+    "sx": 5.0,
+    "gq": 0.15,
+    "B_R": 6.0,
+    "M_R": 40.0,
+    "th_b": -0.1
+  },
+  "register_basis_columns_e_v_e1_e2": [
+    [
+      0.9558255911997182,
+      -0.13084681470780063,
+      -0.2632043888094035
+    ],
+    [
+      0.13095850962691097,
+      0.9912386461929457,
+      -0.01719927469036797
+    ],
+    [
+      0.263148832343994,
+      -0.01802934758661423,
+      0.9645867688609425
+    ]
+  ],
+  "m_v": -0.14406728133112404,
+  "injection_noise_four_legs_rad_s": 0.05504979495042765,
+  "predictor_error": {
+    "four_legs_rms": [
+      0.09753310243846353,
+      0.163984204360612,
+      0.17533473248008824
+    ],
+    "three_legs_rms": [
+      0.11435557975391969,
+      0.18683453647128911,
+      0.20968649841200102
+    ]
+  },
+  "fl_readout_error": {
+    "rms": [
+      0.00967161805378913,
+      0.012747978353073541,
+      0.018337819501363328
+    ],
+    "max": [
+      0.14293231752562674,
+      0.20000990837343086,
+      0.2346531923332683
+    ]
+  },
+  "freed_units": {
+    "layer1": [
+      225,
+      360,
+      443,
+      370,
+      103,
+      436,
+      303,
+      372,
+      351,
+      350,
+      405,
+      151,
+      477,
+      85,
+      314,
+      45,
+      132,
+      400,
+      60,
+      294,
+      5,
+      228,
+      163,
+      27,
+      82,
+      141,
+      104,
+      203,
+      13,
+      125,
+      354,
+      83,
+      317,
+      78,
+      25,
+      268,
+      35,
+      442,
+      204,
+      162,
+      257,
+      345,
+      238,
+      239,
+      222,
+      286,
+      38,
+      124,
+      488,
+      309,
+      483,
+      495,
+      439,
+      276,
+      491,
+      417,
+      376,
+      139,
+      84,
+      232,
+      469,
+      348
+    ],
+    "layer2": [
+      173,
+      94,
+      113,
+      239,
+      249,
+      21,
+      118,
+      137,
+      227,
+      95,
+      163,
+      36,
+      126,
+      46,
+      225
+    ],
+    "layer3": [
+      27,
+      48,
+      99,
+      61,
+      40,
+      101,
+      53,
+      103,
+      35,
+      119,
+      28,
+      107,
+      112,
+      72
+    ]
+  },
+  "circuit_units": {
+    "v1": {
+      "layer1": {
+        "flag": [
+          225,
+          360
+        ],
+        "abs": [
+          443,
+          370,
+          103,
+          436
+        ],
+        "bells": [
+          303,
+          372,
+          351,
+          350,
+          405,
+          151,
+          477,
+          85,
+          314,
+          45,
+          132,
+          400,
+          60,
+          294,
+          5,
+          228,
+          163,
+          27,
+          82,
+          141,
+          104,
+          203,
+          13,
+          125,
+          354,
+          83,
+          317,
+          78,
+          25,
+          268,
+          35,
+          442,
+          204,
+          162,
+          257,
+          345,
+          238,
+          239,
+          222,
+          286
+        ]
+      },
+      "layer2": {
+        "gate": [
+          173,
+          94
+        ],
+        "fr_signal": [
+          113,
+          239,
+          249
+        ],
+        "flag_pass": [
+          21
+        ]
+      },
+      "layer3": {
+        "fr_gated": [
+          27,
+          48,
+          99
+        ],
+        "ref": [
+          61
+        ],
+        "flag_pass": [
+          40
+        ]
+      }
+    },
+    "v2": {
+      "layer1": {
+        "theta_read": 38,
+        "I_read": 124,
+        "abs_wz": [
+          488,
+          309
+        ],
+        "e_lin": 483,
+        "w_z": 495,
+        "wy_gy": [
+          439,
+          276,
+          491,
+          417
+        ],
+        "wz_1gz": [
+          376,
+          139,
+          84,
+          232
+        ],
+        "gx2": [
+          469,
+          348
+        ]
+      },
+      "layer2": {
+        "theta_pass": [
+          118
+        ],
+        "I_pass": [
+          137
+        ],
+        "act": [
+          227,
+          95
+        ],
+        "E0_pass": [
+          163
+        ],
+        "r0_gx2": [
+          36,
+          126,
+          46,
+          225
+        ]
+      },
+      "layer3": {
+        "act_pass": [
+          101
+        ],
+        "theta_clamp": [
+          53,
+          103
+        ],
+        "I_clamp": [
+          35,
+          119
+        ],
+        "fl_readout": [
+          28,
+          107,
+          112
+        ],
+        "fl_readout_ref": [
+          72
+        ]
+      }
+    }
+  },
+  "freeing_action_error": {
+    "rms": 0.0019175653086972947,
+    "max": 0.03391498260946468,
+    "p999": 0.012451230621497257
+  },
+  "fitted_to_data": [
+    "v1: N_FR, fault-signal weights w, least-squares fold (see policies/edited/weight_edit.json)",
+    "predictor of last_action[FL] from the other 44 inputs (ridge on v1 rollouts, four and three legs)",
+    "FL command covariance (register basis) and mean m_v (v1 rollouts on four legs)",
+    "ridge readout of the FL command from layer 2 (v2 network, four legs)",
+    "least-squares fold (62/15/14 units) on v2-prototype observations"
+  ],
+  "weight_groups_changed": {
+    "mlp.0.weight[:, 2], [:, 8]": "E1 yaw-rate loop",
+    "mlp.0.weight[:, 9:12], [:, 21:24]": "E2 rank-1 gated shift (v1)",
+    "mlp.0.weight[:, all except 33:36] (original units)": "re-wired reading of last_action[FL] = W0[:, FL] M^T",
+    "mlp.0.weight[:, 33:36] (original units)": "only the yaw injection (0.25/s_y) W0[:, 8] e_v^T",
+    "freed units": "v1 circuit (46/6/5) + v2 heading circuit and FL readout (16/9/9)",
+    "mlp.6 rows 0..2": "FL outputs = gated readout + gated registers",
+    "all next-layer weights of freed units": "least-squares fold"
+  },
+  "changed_entries": {
+    "mlp.0.weight": 24064,
+    "mlp.0.bias": 512,
+    "mlp.2.weight": 131072,
+    "mlp.2.bias": 256,
+    "mlp.4.weight": 32768,
+    "mlp.4.bias": 128,
+    "mlp.6.weight": 1536,
+    "mlp.6.bias": 12
+  },
+  "checks": {
+    "fl_registers_max_err_act_on": 0.06656243446483434,
+    "fl_registers_max_err_all_three_leg": 0.06656243446483434,
+    "theta_register_max_err": 0.004800571070449122,
+    "I_register_max_err": 0.005000000000002891,
+    "three_legs_other_actions_vs_prototype_max": 0.025162994756083412,
+    "three_legs_other_actions_vs_prototype_rms": 0.0019513651774558114,
+    "four_legs_vs_prototype_max": 0.24416642216379525,
+    "four_legs_vs_prototype_rms": 0.007119531849111207,
+    "four_legs_vs_v1_rms": 0.022591577969953702,
+    "four_legs_vs_v1_max": 0.30806066353274975,
+    "active_fraction_three_leg_samples": 0.4483333333333333,
+    "onnx_vs_numpy_max": 2.78778545106384e-05
+  },
+  "samples": {
+    "v1_four": 18000,
+    "v1_three": 18000,
+    "proto_four": 18000,
+    "proto_three": 18000
+  },
+  "build_time_s": 7.4
+}

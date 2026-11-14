@@ -1,0 +1,143 @@
+{
+ "protocol": "design seeds 0-9; four legs: 20 s; three legs: goal reaching mode A (see harness/goal_reaching.py)",
+ "attempts": [
+  {
+   "order": 0,
+   "name": "v1 (no heading hold)",
+   "parameters": null,
+   "four_legs_fwd0.3_abs_heading_deg": 2.2166185627682973,
+   "four_legs_side_right_abs_heading_deg": 17.96802867061595,
+   "modeA_2m_reached": 6,
+   "modeA_4m_reached": 0,
+   "modeA_3m_1m_reached": 5
+  },
+  {
+   "order": 1,
+   "name": "fold last_action[FL] (H1 recipe), no hold",
+   "parameters": null,
+   "four_legs_fwd0.3_abs_heading_deg": 31.562679843929466,
+   "four_legs_side_right_abs_heading_deg": 42.07950977993914,
+   "modeA_2m_reached": 2,
+   "modeA_4m_reached": 1,
+   "modeA_3m_1m_reached": 3
+  },
+  {
+   "order": 2,
+   "name": "predictor from four-leg data (14 inputs), no hold",
+   "parameters": {
+    "K_th": 0.0,
+    "K_I": 0.0,
+    "L_th": 0.2,
+    "L_I": 0.34,
+    "s1": 1.0,
+    "s2": 1.0,
+    "s_y": 4.0,
+    "th_b": -0.1
+   },
+   "four_legs_fwd0.3_abs_heading_deg": 1.50813016701214,
+   "four_legs_side_right_abs_heading_deg": 6.343187041472406,
+   "modeA_2m_reached": 0,
+   "modeA_4m_reached": 0,
+   "modeA_3m_1m_reached": 1
+  },
+  {
+   "order": 3,
+   "name": "predictor from four- and three-leg data (44 inputs), no hold",
+   "parameters": {
+    "K_th": 0.0,
+    "K_I": 0.0,
+    "L_th": 0.2,
+    "L_I": 0.34,
+    "s1": 1.0,
+    "s2": 1.0,
+    "s_y": 4.0,
+    "th_b": -0.1
+   },
+   "four_legs_fwd0.3_abs_heading_deg": 1.6230382374824288,
+   "four_legs_side_right_abs_heading_deg": 18.04368703416778,
+   "modeA_2m_reached": 7,
+   "modeA_4m_reached": 0,
+   "modeA_3m_1m_reached": 5
+  },
+  {
+   "order": 4,
+   "name": "+ heading hold, H1 gains and limits, s_y = 10",
+   "parameters": {
+    "K_th": 3.0,
+    "K_I": 3.0,
+    "L_th": 0.35,
+    "L_I": 0.3,
+    "s1": 1.0,
+    "s2": 1.0,
+    "s_y": 10.0
+   },
+   "four_legs_fwd0.3_abs_heading_deg": 1.576712033994043,
+   "four_legs_side_right_abs_heading_deg": 19.026776844208257,
+   "modeA_2m_reached": 7,
+   "modeA_4m_reached": 5,
+   "modeA_3m_1m_reached": 6
+  },
+  {
+   "order": 5,
+   "name": "+ heading hold, bounded registers (K_I 3, no crab offset)",
+   "parameters": {
+    "K_th": 3.0,
+    "K_I": 3.0,
+    "L_th": 0.2,
+    "L_I": 0.17,
+    "s1": 1.0,
+    "s2": 1.0,
+    "s_y": 4.0,
+    "th_b": 0.0
+   },
+   "four_legs_fwd0.3_abs_heading_deg": 1.6230382374824288,
+   "four_legs_side_right_abs_heading_deg": 18.04368703416778,
+   "modeA_2m_reached": 7,
+   "modeA_4m_reached": 5,
+   "modeA_3m_1m_reached": 6
+  },
+  {
+   "order": 6,
+   "name": "+ extra side trim 0.2 m/s",
+   "parameters": {
+    "K_th": 3.0,
+    "K_I": 3.0,
+    "L_th": 0.2,
+    "L_I": 0.17,
+    "s1": 1.0,
+    "s2": 1.0,
+    "s_y": 4.0,
+    "th_b": 0.0,
+    "extra_trim": [
+     0.0,
+     0.2,
+     0.0
+    ]
+   },
+   "four_legs_fwd0.3_abs_heading_deg": 2.176404201640237,
+   "four_legs_side_right_abs_heading_deg": 18.64760608914824,
+   "modeA_2m_reached": 4,
+   "modeA_4m_reached": 3,
+   "modeA_3m_1m_reached": 3
+  },
+  {
+   "order": 7,
+   "name": "final: K_I 1.5, crab offset 0.1 rad",
+   "parameters": {
+    "K_th": 3.0,
+    "K_I": 1.5,
+    "L_th": 0.2,
+    "L_I": 0.34,
+    "s1": 1.0,
+    "s2": 1.0,
+    "s_y": 4.0,
+    "th_b": -0.1
+   },
+   "four_legs_fwd0.3_abs_heading_deg": 1.6230382374824288,
+   "four_legs_side_right_abs_heading_deg": 18.04368703416778,
+   "modeA_2m_reached": 7,
+   "modeA_4m_reached": 6,
+   "modeA_3m_1m_reached": 5
+  }
+ ]
+}

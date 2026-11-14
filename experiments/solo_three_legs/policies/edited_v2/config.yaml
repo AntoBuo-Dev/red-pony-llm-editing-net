@@ -1,0 +1,81 @@
+robot: SOLO-12 (example-robot-data solo12.urdf -> assets/solo12/solo12.xml)
+joint_names:
+- FL_HAA
+- FL_HFE
+- FL_KFE
+- FR_HAA
+- FR_HFE
+- FR_KFE
+- HL_HAA
+- HL_HFE
+- HL_KFE
+- HR_HAA
+- HR_HFE
+- HR_KFE
+default_q:
+- 0.1
+- 0.8
+- -1.6
+- -0.1
+- 0.8
+- -1.6
+- 0.1
+- -0.8
+- 1.6
+- -0.1
+- -0.8
+- 1.6
+dt: 0.02
+decimation: 10
+sim_dt: 0.002
+kp: 4.0
+kd: 0.2
+torque_limit: 2.7
+action_scale: 0.3
+action_clip: 6.0
+obs_layout:
+  ang_vel:
+  - 0
+  - 3
+  gravity:
+  - 3
+  - 6
+  cmd:
+  - 6
+  - 9
+  dof_pos:
+  - 9
+  - 21
+  dof_vel:
+  - 21
+  - 33
+  last_action:
+  - 33
+  - 45
+  clock:
+  - 45
+  - 47
+obs_dim: 47
+obs_scale_ang_vel: 0.25
+obs_scale_cmd:
+- 2.0
+- 2.0
+- 0.25
+obs_scale_dof_pos: 1.0
+obs_scale_dof_vel: 0.05
+gait_freq: 2.5
+leg_phase_offset:
+- 0.0
+- 0.5
+- 0.5
+- 0.0
+stand_cmd_norm: 0.1
+tucked_pose:
+- 0.0
+- 1.6
+- -2.9
+notes: obs = [ang_vel*0.25, projected_gravity, cmd*(2,2,0.25), q-q0, dq*0.05, last_action,
+  sin/cos(2 pi phase) (zero when |cmd|<0.1)]; q_target = q0 + 0.3*action; joint PD
+  in MuJoCo position actuators
+source_checkpoint: model_1200.pt
+train_iter: 1200
