@@ -1,5 +1,9 @@
 # Heading + lateral hold policy (2026-11-11, weights edited by hand)
 
+> **Update (2026-11-14).** This README is kept as written on 2026-11-11. Since then the policy has
+> also run on the real H1_2; a systematic real-robot campaign is under way. See
+> [`../../README.md`](../../README.md).
+
 Edited from `policies/h1_2_squat/2026-09-13_21-27-39`: the heading hold of
 `policies/h1_2_squat/2026-11-11_heading-hold` plus a lateral hold. Same architecture and
 `deploy.yaml`.

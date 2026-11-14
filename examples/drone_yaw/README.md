@@ -24,8 +24,9 @@ by hand or by solving a square linear system. Same shape, same file format.
 | cube (3 m sideways, 1.8 m up): max tilt | 44° / 47° | 39° / 42° |
 | missions completed | — | 18 of 20 flights (2 stopped by radio-link loss, cause not isolated) |
 
-Measured in a fast Python simulator and then in a full simulator (motors, ground, flight-controller
-firmware), without noise. Not tested on the real drone.
+The numbers come from a fast Python simulator and a full simulator (motors, ground, flight-controller
+firmware), without noise. The edited network also flies on the real drone; a systematic flight
+campaign is under way to build a larger pool of flights.
 
 ## The path, including the failed attempts
 
@@ -111,8 +112,8 @@ untouched.
 
 ## Limits
 
-Never tested: sensor noise, wind, different mass or thrust, the onboard computer, real flight. The
-steep step near ±180° has never seen noise. The limiter is tuned on a 9.7 N hover thrust and the
+The edited network flies on the real drone, but the pool of real flights is still small: the
+systematic campaign is collecting more before we publish flight statistics. The limiter is tuned on a 9.7 N hover thrust and the
 simulator's motor curve. The shift is exact only level and at zero error; freezing holds for small
 tilts. Thresholds, number and shape of the bumps were chosen by hand with few attempts. Flights are
 nearly deterministic: 3 repetitions measure repeatability, not robustness.

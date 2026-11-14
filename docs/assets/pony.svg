@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 112" role="img" aria-label="Red rocking horse">
+  <title>R.E.D. Pony</title>
+  <g fill="none" stroke="#e0352b" stroke-linecap="round" stroke-linejoin="round">
+    <!-- rocker -->
+    <path d="M8 84 Q64 112 120 84" stroke-width="7"/>
+    <!-- legs -->
+    <path d="M47 58 L31 92.5 M54 60 L43 95.5 M80 60 L86 95.5 M86 58 L98 92.5" stroke-width="6"/>
+  </g>
+  <g fill="#e0352b">
+    <!-- tail -->
+    <path d="M42 47 C31 43 22 50 19 66 C26 60 33 58 43 55 Z"/>
+    <!-- body -->
+    <ellipse cx="66" cy="52" rx="27" ry="11.5"/>
+    <!-- neck -->
+    <path d="M76 47 L84 17 L99 21 L93 56 Z"/>
+    <!-- head -->
+    <path d="M84 15 Q90 6 100 9 L115 25 Q118 32 111 34 L95 29 Z"/>
+    <!-- ear -->
+    <path d="M87 13 L89 1.5 L96 10 Z"/>
+    <!-- mane -->
+    <path d="M85 12 L77 18 L83 20 L75 27 L81 29 L73 36 L79 38 L72 45 L78 47 L84 17 Z"/>
+  </g>
+  <!-- saddle and eye cut out of the silhouette -->
+  <path d="M55 42 Q66 36 77 42" fill="none" stroke="#0d1014" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M57 48 Q66 44 75 48" fill="none" stroke="#0d1014" stroke-width="1.6" stroke-linecap="round"/>
+  <circle cx="99" cy="16" r="2.1" fill="#0d1014"/>
+</svg>

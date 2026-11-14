@@ -10,13 +10,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <link rel="stylesheet" href="assets/site.css">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d1014'/%3E%3Crect x='6' y='11' width='9' height='9' rx='2' fill='%23e8604f'/%3E%3Crect x='17' y='11' width='9' height='9' rx='2' fill='%236ad6ad'/%3E%3C/svg%3E">
+<link rel="icon" href="assets/pony.svg" type="image/svg+xml">
 </head>
 <body>
 
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="#top"><i></i>R.E.D. Pony</a>
+    <a class="brand" href="#top"><img src="assets/pony.svg" alt="" width="30" height="26">R.E.D. Pony</a>
     <nav aria-label="Sections">
       <a href="#idea">Idea</a>
       <a href="#toolkit">Toolkit</a>
@@ -53,6 +53,9 @@
     <div class="stat"><b>82° → 1°</b><span>H1_2 heading drift in 30 s, walking with the turn stick at zero</span></div>
     <div class="stat"><b>0.26–0.50°</b><span>drone yaw error after jumps up to 100°, on a network that could not yaw</span></div>
     <div class="stat"><b>3 legs</b><span>SOLO-12: train to walk, disable a leg, let the LLM edit the network</span></div>
+  </div>
+  <div class="lesson real">
+    <p class="l-seen"><b>On real robots</b>The edited H1_2 and drone networks run on the real robots. The figures and tables on this page come from simulation, where every trial can be repeated and measured; on hardware we are running a systematic campaign of experiments to build a larger pool of trials before reporting real-robot statistics.</p>
   </div>
 </section>
 
@@ -186,7 +189,7 @@ v<sub>y</sub> seen by the network = v<sub>y,cmd</sub> − 2p</pre>
         <tr><td>Mean action change per step (legs, torso)</td><td class="o">0.087</td><td class="h">0.090</td><td>—</td></tr>
         <tr><td>Falls</td><td class="o">0</td><td class="h">0</td><td class="e">0</td></tr>
       </tbody>
-      <caption>Heights 0.98 / 0.85 / 0.74 / 0.71 m for the heading metrics; vx −0.3 and 0.2…1.0 m/s at six heights for the lateral metrics. Yaw kicks of 1–1.5 rad/s and floor friction 0.5 / 1.5: no fall, heading back within about 2°. Not yet run in the C++ simulator or on the robot.</caption>
+      <caption>Heights 0.98 / 0.85 / 0.74 / 0.71 m for the heading metrics; vx −0.3 and 0.2…1.0 m/s at six heights for the lateral metrics. Yaw kicks of 1–1.5 rad/s and floor friction 0.5 / 1.5: no fall, heading back within about 2°. The numbers in this table come from the replica; the edited policies also run on the real H1_2, where the systematic campaign is under way.</caption>
     </table>
   </div>
 
@@ -303,7 +306,7 @@ v<sub>y</sub> seen by the network = v<sub>y,cmd</sub> − 2p</pre>
   <div class="lesson">
     <p class="l-seen"><b>Seen</b>A network trained with no pressure on yaw still depends strongly on yaw: zero training error says nothing about what it does elsewhere.</p>
     <p class="l-got"><b>Understood</b>Values live after the fold, gains live in which side of the fold each unit sits on. Every behaviour you remove must be replaced or checked.</p>
-    <p class="l-next"><b>Not tested</b>Sensor noise, wind, different mass or thrust, the onboard computer, real flight.</p>
+    <p class="l-next"><b>On the real drone</b>The edited network flies on the real quadrotor. The numbers above are from simulation; the systematic flight campaign under way is building a larger pool of flights.</p>
   </div>
   <p class="src">Write-up with all the numbers: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/tree/main/examples/drone_yaw">examples/drone_yaw</a>. The code lives in the AC-MPC research repository and is not published here.</p>
 </section>
@@ -352,8 +355,8 @@ v<sub>y</sub> seen by the network = v<sub>y,cmd</sub> − 2p</pre>
   <h2 id="t-limits">What this does not show.</h2>
   <div class="prose">
     <ul>
-      <li><b>Simulation only.</b> The H1_2 edits ran in a Python replica of the controller, the drone edit in a fast and a full simulator, both without sensor noise. None of the edited networks has run on a real robot yet.</li>
-      <li><b>Robustness.</b> The original networks were trained with domain randomisation; the edits are built on one model. How much robustness survives is not measured.</li>
+      <li><b>Real-robot statistics are still coming.</b> The edited H1_2 and drone networks run on the real robots, but the measurements on this page come from simulation: a Python replica of the H1_2 controller, a fast and a full simulator for the drone, without sensor noise. A systematic real-robot campaign is under way to collect a larger pool of trials; until it is done we do not report hardware success rates.</li>
+      <li><b>Robustness.</b> The original networks were trained with domain randomisation; the edits are built on one model. How much robustness survives has not been measured systematically yet.</li>
       <li><b>Hand-tuned parameters.</b> Thresholds, gains, number and shape of the sensor units were chosen with few attempts. They work; how far they are from the edges is mostly unknown.</li>
       <li><b>Side effects.</b> H1_2 gives up three wrist joints as memory; the drone's limiter is tuned to one hover thrust and one motor curve.</li>
       <li><b>Statistics.</b> The simulators are nearly deterministic: a few repetitions measure repeatability, not robustness. No confidence intervals are claimed.</li>
@@ -365,9 +368,14 @@ v<sub>y</sub> seen by the network = v<sub>y,cmd</sub> − 2p</pre>
 
 <footer>
   <div class="wrap">
+    <div class="mark">
+      <img src="assets/pony.svg" alt="Red rocking horse, the mark of Project R.E.D. Pony" width="168" height="147">
+      <p class="mark-name">R.E.D. Pony</p>
+      <p class="mark-sub">LLM editing of trained networks</p>
+    </div>
     <p><b>Project R.E.D. Pony</b> · <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net">github.com/AntoBuo-Dev/red-pony-llm-editing-net</a></p>
     <p>H1_2 source policy, robot description and controller conventions: <a href="https://github.com/gaetanotorella/H1_2_Squat_Locomotion_RL">H1_2_Squat_Locomotion_RL</a> (Gaetano Torella, University of Naples Federico II, PRISMA Lab), Apache-2.0. SOLO-12: Open Dynamic Robot Initiative.</p>
-    <p>Edits designed and carried out with an LLM agent (Claude), checked against simulation. Numbers on this page come from the experiment logs; drawings marked as schematic are illustrations.</p>
+    <p>Edits designed and carried out with an LLM agent (Claude), tested in simulation and on the real robots. Numbers on this page come from the experiment logs; drawings marked as schematic are illustrations.</p>
   </div>
 </footer>
 

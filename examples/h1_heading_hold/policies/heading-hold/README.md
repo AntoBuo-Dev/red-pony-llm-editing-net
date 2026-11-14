@@ -1,5 +1,9 @@
 # Heading-hold policy (2026-11-11, weights edited by hand, no training)
 
+> **Update (2026-11-14).** This README is kept as written on 2026-11-11. Since then the policy has
+> also run on the real H1_2; a systematic real-robot campaign is under way. See
+> [`../../README.md`](../../README.md).
+
 Edited from `../2026-09-13_21-27-39`. Same architecture (465 → 512 → 256 → 128 → 27, ELU), same
 `deploy.yaml`. With a walking command and the turn stick at zero, the network now holds its heading.
 

@@ -23,8 +23,9 @@ the first hidden layer — the only piece fitted to data.
 | worst lateral deviation in 30 s | 20.3 m | 2.25 m | **0.62 m** |
 | falls | 0 | 0 | 0 |
 
-Tested only in a headless Python/MuJoCo replica of the robot controller (`scripts/sim_harness.py`),
-not in the C++ simulator and not on the robot.
+The numbers above come from a headless Python/MuJoCo replica of the robot controller
+(`scripts/sim_harness.py`). The edited policies also run on the real H1_2; a systematic real-robot
+campaign is under way to build a larger pool of trials before we publish hardware statistics.
 
 ![standing comparison](../../docs/assets/h1/standing_0.98m_0.8ms_comparison.jpg)
 
@@ -131,7 +132,8 @@ python evaluation/heading_hold/evaluate.py policies/h1_2_squat/2026-09-13_21-27-
 
 ## Limits
 
-- Only the Python replica: not the C++ controller, not the robot.
+- On the real robot the policies work, but the pool of trials is still small: the systematic campaign
+  is collecting more before we report statistics.
 - The heading is the integral of the gyro: a gyro bias `b` turns the robot at `b`.
 - The lateral readout is fitted to MuJoCo and to this model.
 - Three wrist joints are repurposed as memory registers.

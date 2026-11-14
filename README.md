@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/assets/pony.svg" width="128" alt="Red rocking horse, the mark of Project R.E.D. Pony"></p>
+
 # Project R.E.D. Pony — LLM editing of trained networks
 
 **Website: https://antobuo-dev.github.io/red-pony-llm-editing-net/**
@@ -7,10 +9,14 @@ finds the room inside the network, and writes a new behaviour straight into the 
 **no retraining, same network shape, same file format**. Each example is told in the order it
 happened, failed attempts included.
 
+The edited H1_2 and drone networks run on the real robots. We are now running a **systematic
+campaign of real-robot experiments** to build a larger pool of trials; the numbers published so far
+come from simulation, where every trial can be repeated and measured.
+
 | example | robot | network | what was written into the weights | status |
 |---|---|---|---|---|
-| [`examples/h1_heading_hold`](examples/h1_heading_hold) | Unitree H1_2 humanoid | MLP 465 → 512 → 256 → 128 → 27, ELU | heading hold (and lateral hold) with memory stored in action channels | done, Python/MuJoCo replica |
-| [`examples/drone_yaw`](examples/drone_yaw) | quadrotor | MLP 17 → 512 → 512 → 4, ELU | yaw tracking on a hover network that could not yaw | done, fast + full simulator |
+| [`examples/h1_heading_hold`](examples/h1_heading_hold) | Unitree H1_2 humanoid | MLP 465 → 512 → 256 → 128 → 27, ELU | heading hold (and lateral hold) with memory stored in action channels | runs on the real robot; numbers from the Python/MuJoCo replica |
+| [`examples/drone_yaw`](examples/drone_yaw) | quadrotor | MLP 17 → 512 → 512 → 4, ELU | yaw tracking on a hover network that could not yaw | flies on the real drone; numbers from a fast and a full simulator |
 | [`experiments/solo_three_legs`](experiments/solo_three_legs) | SOLO-12 quadruped | MLP, ELU | walking on three legs after one leg is disabled | in progress |
 
 ## Rules of the game
@@ -58,9 +64,11 @@ python -m http.server 8765 --directory docs
 
 ## Limits
 
-Everything here has been run in simulation only. The edits are built on one model of each robot,
-without sensor noise; how much of the original networks' robustness survives is not measured.
-See the *Limits* section of each example.
+The edited H1_2 and drone networks work on the real robots, but the measured results published
+here come from simulation (one model of each robot, no sensor noise). Real-robot statistics will be
+published when the systematic campaign has a large enough pool of trials. How much of the original
+networks' robustness survives has not been measured systematically yet. See the *Limits* section of
+each example.
 
 ## Credits and license
 
@@ -68,5 +76,5 @@ Apache-2.0 (see `LICENSE`). The H1_2 source policy, robot description and contro
 come from [H1_2_Squat_Locomotion_RL](https://github.com/gaetanotorella/H1_2_Squat_Locomotion_RL)
 (Gaetano Torella, University of Naples Federico II, PRISMA Lab), Apache-2.0. SOLO-12 is an
 Open Dynamic Robot Initiative robot; its description is used under its own license (kept next to
-the assets). The edits were designed and carried out with an LLM agent (Claude) and checked
-against simulation.
+the assets). The edits were designed and carried out with an LLM agent (Claude) and tested in
+simulation and on the real robots.
