@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Project R.E.D. Pony</title>
-<meta name="description" content="An LLM edits trained robot policies by hand, without retraining: H1_2 heading hold, quadrotor yaw tracking, SOLO-12 on three legs.">
+<meta name="description" content="A benchmark of LLM agents that repair trained robot policies by editing their weights, without retraining: IMU replacement, broken leg, heading drift.">
 <meta name="theme-color" content="#0d1014">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,12 +18,10 @@
   <div class="wrap">
     <a class="brand" href="#top"><img src="assets/pony.svg" alt="" width="30" height="26">R.E.D. Pony</a>
     <nav aria-label="Sections">
-      <a href="#toolkit">Toolkit</a>
-      <a href="#fold">The fold</a>
-      <a href="#h1">H1_2</a>
+      <a href="#bench">Benchmark</a>
+      <a href="#h1">Heading drift</a>
+      <a href="#solo">Broken leg</a>
       <a href="#drone">Drone</a>
-      <a href="#solo">SOLO</a>
-      <a href="#method">Method</a>
       <a href="#limits">Limits</a>
     </nav>
     <a class="gh" href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net">GitHub</a>
@@ -58,50 +56,48 @@
   </div>
 </section>
 
-<!-- ============================================================ TOOLKIT -->
-<section class="step" id="toolkit" aria-labelledby="t-kit">
-  <p class="eyebrow"><i style="background:var(--circuit)"></i>Toolkit</p>
-  <h2 id="t-kit">A few ELU units build any controller block.</h2>
-  <div class="board">
-    <div class="controls">
-      <div class="seg" role="group" aria-label="Building block" id="kit-seg">
-        <button type="button" data-k="pass" aria-pressed="true">Pass-through</button>
-        <button type="button" data-k="abs" aria-pressed="false">|x|</button>
-        <button type="button" data-k="clamp" aria-pressed="false">Clamp</button>
-        <button type="button" data-k="sq" aria-pressed="false">x²</button>
-        <button type="button" data-k="prod" aria-pressed="false">Product</button>
-        <button type="button" data-k="gate" aria-pressed="false">Gate</button>
-      </div>
-    </div>
-    <canvas id="kit" aria-label="ELU construction against the exact function"></canvas>
-    <div class="controls" id="kit-ctl"></div>
-    <div class="eq" id="kit-eq"></div>
-    <p class="src" id="kit-src"></p>
+<!-- ============================================================ BENCHMARK -->
+<section class="step" id="bench" aria-labelledby="t-bench">
+  <p class="eyebrow"><i style="background:var(--edit)"></i>EditBench v1.0</p>
+  <h2 id="t-bench">Can an agent repair a trained policy by editing its weights?</h2>
+  <div class="prose">
+    <p>An agent gets a trained controller, a simulator and a symptom. It must hand back the same network with a few weights changed, no training. The result is scored on a seed and on perturbations it never sees.</p>
   </div>
-</section>
-
-<!-- ============================================================ FOLD -->
-<section class="step" id="fold" aria-labelledby="t-fold">
-  <p class="eyebrow"><i style="background:var(--orig)"></i>The lesson that cost a crash</p>
-  <h2 id="t-fold">Correct before the fold, not after it.</h2>
+  <div class="table">
+    <table class="words">
+      <thead><tr><th>Request</th><th>Robot</th><th>Symptom</th><th>Passes when</th></tr></thead>
+      <tbody>
+        <tr><td><b>IMU replaced</b></td><td>SOLO-12</td><td>New IMU board: the robot falls and turns the wrong way. The cause is readable in the robot model.</td><td>No falls, turn error ≤ 0.05 rad/s, also with sensor noise and payload.</td></tr>
+        <tr><td><b>IMU replaced, hidden cause</b></td><td>SOLO-12</td><td>Same defect; the simulator is a remote service and no file names the cause.</td><td>Same criteria.</td></tr>
+        <tr><td><b>Broken leg</b> (open task)</td><td>SOLO-12</td><td>Front-left leg locked: the robot limps and reaches no goal.</td><td>At least half of the goals, also with noise and payload; four-leg walking kept.</td></tr>
+        <tr><td><b>Heading drift</b></td><td>H1_2</td><td>With the turn stick at zero the robot drifts 2.8 °/s.</td><td>Yaw rate ≤ 0.2 °/s, also on low and high friction and under kicks; turning kept.</td></tr>
+      </tbody>
+      <caption>Budgets per run: 60 or 120 minutes, 300k or 800k tokens, 3 evaluated attempts, 5 declared changes.</caption>
+    </table>
+  </div>
+  <div class="table">
+    <table>
+      <thead><tr><th>First runs, one per cell</th><th>IMU</th><th>IMU, hidden</th><th>Broken leg</th><th>Heading drift</th></tr></thead>
+      <tbody>
+        <tr><td>Gemini 4 Hydrogen · Antigravity CLI <span class="note">campaign</span></td><td class="e">pass</td><td class="e">pass</td><td class="o">fail</td><td class="o">fail (token budget)</td></tr>
+        <tr><td>Claude Sonnet · subagent <span class="note">exploratory</span></td><td class="e">pass</td><td class="e">pass</td><td class="o">fail</td><td class="o">fail</td></tr>
+        <tr><td>Claude Opus · subagent <span class="note">exploratory</span></td><td class="e">pass</td><td class="e">pass</td><td class="o">fail</td><td class="o">fail</td></tr>
+        <tr><td>Claude Fable · subagent <span class="note">exploratory</span></td><td class="e">pass</td><td class="e">pass</td><td class="o">fail</td><td class="e">pass</td></tr>
+      </tbody>
+      <caption>One run per cell on one held-out seed: a verdict says that this run produced a passing network, not how often the system would. 4 of 42 campaign cells are done. Exploratory runs had weaker isolation and no token stop, and enter no test.</caption>
+    </table>
+  </div>
   <div class="two">
-    <div class="board">
-      <canvas id="fold-cv" aria-label="ELU curve with an operating point and its tangent"></canvas>
-      <div class="controls">
-        <div class="seg" role="group" aria-label="Presets" id="fold-seg">
-          <button type="button" data-k="flat" aria-pressed="true">Flat side</button>
-          <button type="button" data-k="after" aria-pressed="false">Add after: +1.45</button>
-          <button type="button" data-k="before" aria-pressed="false">Add before: +3.5</button>
-        </div>
-      </div>
-      <div class="controls" id="fold-ctl"></div>
-      <div class="readouts" id="fold-ro"></div>
+    <div class="prose">
+      <h3>IMU replaced: one exact edit</h3>
+      <p>All eight runs found the same fix in about two minutes: the board is rotated 180° about x, so four first-layer columns change sign. 2048 of 190 348 weights.</p>
     </div>
     <div class="prose">
-      <p>Adding the missing thrust at the drone's output gave the right value, and the drone diverged.</p>
-      <p>A unit on the flat side of the ELU has almost no slope. Adding after the fold fixes its value, not its gain. Adding before it moves the unit back to the steep side: same output, slope 1.</p>
+      <h3>Heading drift: memory decides</h3>
+      <p>The passing edit added a heading-error integrator and stays at 0.03–0.05 °/s on every floor. A fitted, memoryless correction met the nominal threshold (0.16 °/s) and failed on low friction (1.15 °/s).</p>
     </div>
   </div>
+  <p class="src">The two sections below are the pilot edits behind the heading-drift and broken-leg requests.</p>
 </section>
 
 <!-- ============================================================ H1 -->
@@ -183,66 +179,6 @@ rate = −(ω<sub>y</sub> g<sub>y</sub> + ω<sub>z</sub> g<sub>z</sub>)(1 + g<su
   <p class="src">Code and edited networks: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/tree/main/examples/h1_heading_hold">examples/h1_heading_hold</a> · source policy: <a href="https://github.com/gaetanotorella/H1_2_Squat_Locomotion_RL">H1_2_Squat_Locomotion_RL</a>.</p>
 </section>
 
-<!-- ============================================================ DRONE -->
-<section class="step" id="drone" aria-labelledby="t-drone">
-  <p class="eyebrow"><i style="background:var(--yaw)"></i>Quadrotor hover network</p>
-  <h2 id="t-drone">Teach a hover network to turn.</h2>
-  <div class="two">
-    <div class="prose">
-      <p>The hover policy (MLP 17-512-512-4) holds position to 2.7 cm but always points its nose to −50°, whatever the reference. It was trained with zero yaw reward.</p>
-      <p>Release both drones: left, the measured original; right, the rewritten yaw command.</p>
-    </div>
-    <div class="board">
-      <canvas id="yaw-cv" aria-label="Original goes to −50°, edited follows the reference"></canvas>
-      <div class="controls" id="yaw-ctl"></div>
-      <div class="controls">
-        <button type="button" class="btn strong" id="yaw-go">Release</button>
-        <div class="readouts" id="yaw-ro"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="two flip">
-    <div class="board">
-      <canvas id="bell-cv" aria-label="Twenty-three yaw sensor units and their activations"></canvas>
-      <div class="controls" id="bell-ctl"></div>
-    </div>
-    <div class="prose">
-      <h3>Neurons that sense yaw</h3>
-      <p>413 and 490 of the 512 units per layer were idle. Twenty-three of them became yaw sensors, each lit within ±50° of its heading.</p>
-      <p>With them, the next layer is shifted back to the network's own equilibrium at every heading: a 23 × 23 linear system, no fit.</p>
-    </div>
-  </div>
-
-  <h3>How it went</h3>
-  <ol class="path">
-    <li class="diag"><span class="tag">probe</span><h4>Stable at every heading, wrong operating point.</h4></li>
-    <li class="ok"><span class="tag">works</span><h4>New yaw command, with a steep step at ±180°.</h4></li>
-    <li class="ko"><span class="tag">fails</span><h4>Missing thrust added at the output: right value, no gain, diverges.</h4></li>
-    <li class="ok"><span class="tag">half</span><h4>Exact shift before the fold: offset gone, oscillates with 40 ms delay.</h4></li>
-    <li class="ok"><span class="tag">works</span><h4>Yaw frozen in the vertical branch, shift only on thrust units.</h4></li>
-    <li class="ko"><span class="tag">fails</span><h4>First full-sim flight: the removed offset was braking the climb.</h4></li>
-    <li class="diag"><span class="tag">false alarm</span><h4>An abort caused by a second simulator on the same local network.</h4></li>
-    <li class="ok"><span class="tag">works</span><h4>Climb limiter with a ceiling: all missions pass.</h4></li>
-  </ol>
-
-  <div class="table">
-    <table>
-      <thead><tr><th>Yaw mission</th><th>reference</th><th>jump</th><th>original error</th><th>edited error</th><th>time to &lt;10°</th><th>position</th><th>peak</th></tr></thead>
-      <tbody id="yaw-tab"></tbody>
-      <caption>Full simulator; edited: nominal / +30 ms delay. 20 943 of 272 896 weights changed.</caption>
-    </table>
-  </div>
-  <div class="table">
-    <table>
-      <thead><tr><th>Missions</th><th>original</th><th>edited</th></tr></thead>
-      <tbody id="drone-tab"></tbody>
-      <caption>18 of 20 flights completed; 2 lost the radio link.</caption>
-    </table>
-  </div>
-  <p class="src">Write-up: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/tree/main/examples/drone_yaw">examples/drone_yaw</a>.</p>
-</section>
-
 <!-- ============================================================ SOLO -->
 <section class="step" id="solo" aria-labelledby="t-solo">
   <p class="eyebrow"><i style="background:var(--edit)"></i>SOLO-12 quadruped · simulation</p>
@@ -290,18 +226,6 @@ rate = −(ω<sub>y</sub> g<sub>y</sub> + ω<sub>z</sub> g<sub>z</sub>)(1 + g<su
       </ul>
     </div>
   </div>
-
-  <h3>How it went</h3>
-  <ol class="path">
-    <li class="ko"><span class="tag">fails</span><h4>Change only the timing: still leans on the leg (41–100 %).</h4></li>
-    <li class="ok"><span class="tag">works</span><h4>Shift the feet: a static three-leg stance exists.</h4></li>
-    <li class="ko"><span class="tag">fails</span><h4>Lie to the network about its joints or gravity.</h4></li>
-    <li class="ko"><span class="tag">fails</span><h4>Inverted-pendulum foot placement: 64 % leaning.</h4></li>
-    <li class="idea"><span class="tag">idea</span><h4>Hide the posture shift from the network's inputs.</h4></li>
-    <li class="ok"><span class="tag">works</span><h4>Front-right double stance, command trim, yaw loop.</h4></li>
-    <li class="diag"><span class="tag">ablate</span><h4>Each part is needed.</h4></li>
-    <li class="ok"><span class="tag">v2</span><h4>Heading hold in the dead leg's channels: 9 → 17 of 30 goals.</h4></li>
-  </ol>
 
   <div class="table">
     <table>
@@ -378,60 +302,40 @@ rate = −(ω<sub>y</sub> g<sub>y</sub> + ω<sub>z</sub> g<sub>z</sub>)(1 + g<su
   <p class="src">Code, policies and every evaluation: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/tree/main/experiments/solo_three_legs">experiments/solo_three_legs</a>.</p>
 </section>
 
-<!-- ============================================================ METHOD -->
-<section class="step" id="method" aria-labelledby="t-method">
-  <p class="eyebrow"><i style="background:var(--circuit)"></i>Method</p>
-  <h2 id="t-method">Nine operators, four rules.</h2>
-
-  <div class="inv">
-    <div><b>I1</b><span>Same shape and file format.</span></div>
-    <div><b>I2</b><span>No gradient on the result; every fitted parameter declared.</span></div>
-    <div><b>I3</b><span>Deterministic builder: original in, edited out.</span></div>
-    <div><b>I4</b><span>Original untouched; it is the baseline.</span></div>
-  </div>
-
-  <div class="ops">
-    <div class="op"><span class="n">O1</span><h4>Fold a redundant unit</h4>
-      <pre>h_j ≈ c_j + Σ α_k h_k   (ridge)
-W_ℓ[:,k] += W_ℓ[:,j] α_k</pre>
-      <p>Frees a unit; error measured.</p></div>
-    <div class="op"><span class="n">O2</span><h4>Retire an idle unit</h4>
-      <pre>b_ℓ += W_ℓ[:,j] · E[h_j]</pre>
-      <p>Exact up to its tiny variation.</p></div>
-    <div class="op"><span class="n">O3</span><h4>Re-coordinatise inputs</h4>
-      <pre>W₀′ = W₀ T,  b₀′ = b₀ + W₀ t</pre>
-      <p>Exact. Trims, loops, sign fixes.</p></div>
-    <div class="op"><span class="n">O4</span><h4>Gated input shift</h4>
-      <pre>W₀′ = W₀ + (W₀ s) wᵀ</pre>
-      <p>Exact where the linear gate is 1.</p></div>
-    <div class="op"><span class="n">O5</span><h4>ELU primitives</h4>
-      <pre>pass · |x| · clamp · x² · product · gate · bump</pre>
-      <p>Error ≤ 1/S.</p></div>
-    <div class="op"><span class="n">O6</span><h4>Shift before the fold</h4>
-      <pre>Φ C = D   (N bump nodes)</pre>
-      <p>Restores values and gains.</p></div>
-    <div class="op"><span class="n">O7</span><h4>Registers in actions</h4>
-      <pre>a_t[R] = κ F(z_{t−1}, x_t)</pre>
-      <p>Memory for a network without state.</p></div>
-    <div class="op"><span class="n">O8</span><h4>Gated output injection</h4>
-      <pre>a′ = f(x) + Σ G_k d_k</pre>
-      <p>Values, not gains.</p></div>
-    <div class="op"><span class="n">O9</span><h4>Output-row replacement</h4>
-      <pre>a′_R = (1−F) L(h) + F·new_R</pre>
-      <p>Reuses a dead joint's channels.</p></div>
+<!-- ============================================================ DRONE -->
+<section class="step" id="drone" aria-labelledby="t-drone">
+  <p class="eyebrow"><i style="background:var(--yaw)"></i>Quadrotor hover network · not in the benchmark yet</p>
+  <h2 id="t-drone">Teach a hover network to turn.</h2>
+  <div class="two">
+    <div class="prose">
+      <p>The hover policy (MLP 17-512-512-4) holds position to 2.7 cm but always points its nose to −50°, whatever the reference. It was trained with zero yaw reward.</p>
+      <p>Release both drones: left, the measured original; right, the rewritten yaw command.</p>
+    </div>
+    <div class="board">
+      <canvas id="yaw-cv" aria-label="Original goes to −50°, edited follows the reference"></canvas>
+      <div class="controls" id="yaw-ctl"></div>
+      <div class="controls">
+        <button type="button" class="btn strong" id="yaw-go">Release</button>
+        <div class="readouts" id="yaw-ro"></div>
+      </div>
+    </div>
   </div>
 
   <div class="table">
-    <table class="opmap">
-      <thead><tr><th>Used in</th><th>O1</th><th>O2</th><th>O3</th><th>O4</th><th>O5</th><th>O6</th><th>O7</th><th>O8</th><th>O9</th></tr></thead>
-      <tbody>
-        <tr><td>H1_2</td><td>✓</td><td>·</td><td>✓</td><td>·</td><td>✓</td><td>·</td><td>✓</td><td>·</td><td>·</td></tr>
-        <tr><td>Drone</td><td>·</td><td>✓</td><td>✓</td><td>·</td><td>✓</td><td>✓</td><td>·</td><td>✓</td><td>·</td></tr>
-        <tr><td>SOLO</td><td>✓</td><td>·</td><td>✓</td><td>✓</td><td>✓</td><td>·</td><td>✓</td><td>✓</td><td>✓</td></tr>
-      </tbody>
+    <table>
+      <thead><tr><th>Yaw mission</th><th>reference</th><th>jump</th><th>original error</th><th>edited error</th><th>time to &lt;10°</th><th>position</th><th>peak</th></tr></thead>
+      <tbody id="yaw-tab"></tbody>
+      <caption>Full simulator; edited: nominal / +30 ms delay. 20 943 of 272 896 weights changed.</caption>
     </table>
   </div>
-  <p class="src">Read · probe · make room · prototype · compile · validate. Full statement: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/blob/main/METHOD.md">METHOD.md</a>.</p>
+  <div class="table">
+    <table>
+      <thead><tr><th>Missions</th><th>original</th><th>edited</th></tr></thead>
+      <tbody id="drone-tab"></tbody>
+      <caption>18 of 20 flights completed; 2 lost the radio link.</caption>
+    </table>
+  </div>
+  <p class="src">Write-up: <a href="https://github.com/AntoBuo-Dev/red-pony-llm-editing-net/tree/main/examples/drone_yaw">examples/drone_yaw</a>.</p>
 </section>
 
 <!-- ============================================================ LIMITS -->
